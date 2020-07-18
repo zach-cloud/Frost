@@ -1,0 +1,1 @@
+- The spec incorrectly states SectorSizeShift as an int8. This is wrong - it is an int16.
