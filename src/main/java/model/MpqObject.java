@@ -1,11 +1,14 @@
 package model;
 
+import encryption.StormCrypt;
 import interfaces.IReadable;
 import reader.BinaryReader;
 
 public class MpqObject implements IReadable {
 
+    private StormCrypt stormCrypt;
     private ArchiveHeader archiveHeader;
+    private EncryptedBlockTable encryptedBlockTable;
     private BlockTable blockTable;
     private ExtendedAttributes extendedAttributes;
     private ExtendedBlockTable extendedBlockTable;
@@ -24,6 +27,7 @@ public class MpqObject implements IReadable {
      */
     @Override
     public void read(BinaryReader reader) {
+        this.stormCrypt = new StormCrypt();
         // Read header - starts at the beginning of MPQ Archive part
         archiveHeader = new ArchiveHeader();
         archiveHeader.read(reader);
@@ -38,18 +42,22 @@ public class MpqObject implements IReadable {
         int blockTableOffsetHigh = archiveHeader.getBlockTableOffsetHigh() + headerStart;
         // Read block table, starting at offset
         reader.setPosition(blockTableStart);
-        blockTable = new BlockTable();
-        blockTable.read(reader);
+
+        this.encryptedBlockTable = new EncryptedBlockTable(archiveHeader.getBlockTableEntries());
+        encryptedBlockTable.read(reader);
+        this.blockTable = new BlockTable(stormCrypt, encryptedBlockTable);
+//        blockTable = new BlockTable();
+//        blockTable.read(reader);
 
 
-        fileData = new FileData();
-        fileData.read(reader);
-        hashTable = new HashTable();
-        hashTable.read(reader);
-
-        extendedBlockTable = new ExtendedBlockTable();
-        extendedBlockTable.read(reader);
-        strongSignature = new StrongSignature();
-        strongSignature.read(reader);
+//        fileData = new FileData();
+//        fileData.read(reader);
+//        hashTable = new HashTable();
+//        hashTable.read(reader);
+//
+//        extendedBlockTable = new ExtendedBlockTable();
+//        extendedBlockTable.read(reader);
+//        strongSignature = new StrongSignature();
+//        strongSignature.read(reader);
     }
 }

@@ -102,12 +102,17 @@ public class BinaryReader {
         lastReadBytes = 0;
     }
 
-    private byte[] readBytes(int count) throws IOException {
+    private byte[] readBytesInternal(int count) throws IOException {
         byte[] collected = new byte[count];
         for(int i = 0 ; i < count; i++) {
             collected[i] = readByteInternal();
         }
         return collected;
+    }
+
+    public byte[] readBytes(int count) throws IOException {
+        adjustStack();
+        return readBytesInternal(count);
     }
 
     /**
@@ -119,7 +124,7 @@ public class BinaryReader {
     public String readString(int length) throws IOException {
         System.out.println("Reading string (" + length + ")");
         adjustStack();
-        byte[] collected = readBytes(length);
+        byte[] collected = readBytesInternal(length);
         return new String(collected);
     }
 
@@ -179,7 +184,7 @@ public class BinaryReader {
     public long readLong()  throws IOException {
         System.out.println("Reading long (8)");
         adjustStack();
-        byte[] collected = readBytes(8);
+        byte[] collected = readBytesInternal(8);
         return java.nio.ByteBuffer.wrap(collected).order(byteOrder).getLong();
     }
 
@@ -192,7 +197,7 @@ public class BinaryReader {
     public int readShort()  throws IOException {
         System.out.println("Reading short (2)");
         adjustStack();
-        byte[] collected = readBytes(2);
+        byte[] collected = readBytesInternal(2);
         return java.nio.ByteBuffer.wrap(collected).order(byteOrder).getShort();
     }
 
@@ -205,7 +210,7 @@ public class BinaryReader {
     public int readInt() throws IOException {
         System.out.println("Reading int (4)");
         adjustStack();
-        byte[] collected = readBytes(4);
+        byte[] collected = readBytesInternal(4);
         return java.nio.ByteBuffer.wrap(collected).order(byteOrder).getInt();
     }
 
