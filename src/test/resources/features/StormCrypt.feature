@@ -11,6 +11,26 @@ Feature: Test Encryption module
     32,0,0,0,-92,60,0,0,84,-57,1,0,0,2,0,-128,-60,60,0,0,-26,0,0,0,-75,2,0,0,0,2,0,-128,-86,61,0,0,-46,1,0,0,-72,4,0,0,0,2,0,-128,124,63,0,0,86,35,0,0,-52,117,0,0,0,2,0,-128,-46,98,0,0,107,1,0,0,47,5,0,0,0,2,0,-128,61,100,0,0,25,47,0,0,99,-32,0,0,0,2,0,-128,86,-109,0,0,-60,7,0,0,0,0,4,0,0,2,0,-128,26,-101,0,0,42,10,0,0,-31,16,0,0,0,2,0,-128,68,-91,0,0,91,0,0,0,-56,0,0,0,0,2,0,-128,-97,-91,0,0,70,14,0,0,16,0,4,0,0,2,0,-128,-27,-77,0,0,28,0,0,0,24,0,0,0,0,2,0,-128,1,-76,0,0,-84,1,0,0,86,11,0,0,0,2,0,-128,-83,-75,0,0,71,0,0,0,84,0,0,0,0,2,0,-128,-12,-75,0,0,16,0,0,0,8,0,0,0,0,2,0,-128,4,-74,0,0,-44,1,0,0,-84,10,0,0,0,2,0,-128,-40,-73,0,0,-122,0,0,0,29,1,0,0,0,2,0,-128,94,-72,0,0,-17,0,0,0,-68,1,0,0,0,2,0,-128,77,-71,0,0,-17,0,0,0,-68,1,0,0,0,2,0,-128,60,-70,0,0,109,0,0,0,-8,0,0,0,0,2,3,-128
     """
 
+  Scenario: Test hashing a known value
+    Given string value "(hash table)"
+    When integer hash is computed with type 3
+    Then hash should be -1011927184
+
+  Scenario: Test hashing a known value
+    Given string value "(block table)"
+    When integer hash is computed with type 3
+    Then hash should be -326913117
+
+  Scenario: Test hashing a known value
+    Given string value "war3map.j"
+    When integer hash is computed with type 1
+    Then hash should be -912848921
+
+  Scenario: Test hashing a known value
+    Given string value "war3map.j"
+    When integer hash is computed with type 2
+    Then hash should be -1783098290
+
 #  Scenario: Test encrypting a known value
 #    Given bytes:
 #    """

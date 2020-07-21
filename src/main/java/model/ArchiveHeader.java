@@ -11,7 +11,7 @@ public class ArchiveHeader implements IReadable {
     private int archiveSize; //int32
     private int format; //int16 (0 = original, 1 = burning crusade)
     private int sectorSizeShift; //int8
-    private long hashTableOffset; //int32
+    private int hashTableOffset; //int32
     private int blockTableOffset; //int32
     private int hashTableEntries; //int32
     private int blockTableEntries; //int32
@@ -109,7 +109,7 @@ public class ArchiveHeader implements IReadable {
         this.sectorSizeShift = sectorSizeShift;
     }
 
-    public long getHashTableOffset() {
+    public int getHashTableOffset() {
         return hashTableOffset;
     }
 

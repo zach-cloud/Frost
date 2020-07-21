@@ -1,0 +1,6 @@
+	40h: IMA ADPCM mono
+	80h: IMA ADPCM stereo
+	01h: Huffman encoded
+	02h: Deflated (see ZLib)
+	08h: Imploded (see PKWare Data Compression Library)
+	10h: BZip2 compressed (see BZip2)

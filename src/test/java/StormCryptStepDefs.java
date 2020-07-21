@@ -14,6 +14,8 @@ public class StormCryptStepDefs {
     private ByteBuffer inputByteBuffer;
     private byte[] result;
     private ByteBuffer resultByteBuffer;
+    private String toHash;
+    private int intHash;
 
     private static String bytesToString(byte[] ar) {
         StringBuilder builder = new StringBuilder();
@@ -59,5 +61,22 @@ public class StormCryptStepDefs {
                 bytesBody, bytesToString(result));
         Assert.assertEquals("Result byte buffer did not match expected body",
                 bytesBody, bytesToString(resultByteBuffer.array()));
+    }
+
+
+    @Given("string value {string}")
+    public void string_value(String toHash) {
+        this.toHash = toHash;
+    }
+
+    @When("integer hash is computed with type {int}")
+    public void integer_hash_is_computed(int type) {
+        this.stormCrypt = new StormCrypt();
+        intHash = stormCrypt.hashAsInt(toHash, type);
+    }
+
+    @Then("hash should be {int}")
+    public void hash_should_be(int expected) {
+        Assert.assertEquals(expected, intHash);
     }
 }

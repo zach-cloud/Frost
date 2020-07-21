@@ -1,17 +1,62 @@
 package model;
 
+import encryption.StormCrypt;
 import interfaces.IReadable;
 import reader.BinaryReader;
 
-public class HashTable implements IReadable {
+import java.util.ArrayList;
+import java.util.List;
+
+import static encryption.StormConstants.BLOCK_TABLE_ENCRYPTION_KEY;
+import static encryption.StormConstants.HASH_TABLE_ENCRYPTION_KEY;
+import static helper.ByteHelper.*;
+
+public class HashTable {
+
+    private static final int HASH_TABLE_ENTRY_SIZE = 16; // 16 bytes = 4 * int32
+    private List<HashTableEntry> entries;
 
     /**
-     * Reads from the binary reader into this model object
+     * Decrypts provided block table and parses the entries.
      *
-     * @param reader Binary reader
+     * @param stormCrypt            Encryption module with little endian order
+     * @param encryptedHashTable    Encrypted hash table (read from file)
      */
-    @Override
-    public void read(BinaryReader reader) {
+    public HashTable(StormCrypt stormCrypt, EncryptedHashTable encryptedHashTable) {
+        entries = new ArrayList<>();
+        byte[] encryptedData = encryptedHashTable.getEncryptedData();
+        byte[] decryptedData = stormCrypt.decryptBytes(encryptedData, HASH_TABLE_ENCRYPTION_KEY);
+        if(decryptedData.length % HASH_TABLE_ENTRY_SIZE != 0) {
+            throw new IllegalArgumentException("Could not convert decrypted bytes " +
+                    "into table entries (size = " + decryptedData.length + ")");
+        }
 
+        for(int i = 0 ; i < decryptedData.length / HASH_TABLE_ENTRY_SIZE; i++) {
+            byte[] filePathHashA = extractBytes(decryptedData, i * HASH_TABLE_ENTRY_SIZE, 4);
+            byte[] filePathHashB = extractBytes(decryptedData, 4 + (i * HASH_TABLE_ENTRY_SIZE), 4);
+            byte[] language = extractBytes(decryptedData, 8 + (i * HASH_TABLE_ENTRY_SIZE), 2);
+            byte[] platform = extractBytes(decryptedData, 10 + (i * HASH_TABLE_ENTRY_SIZE), 2);
+            byte[] fileBlockIndex = extractBytes(decryptedData, 12 + (i * HASH_TABLE_ENTRY_SIZE), 4);
+            HashTableEntry entry = new HashTableEntry(byteToInt(filePathHashA), byteToInt(filePathHashB),
+                    byteToShort(language), byteToShort(platform), byteToInt(fileBlockIndex));
+            entries.add(entry);
+        }
+        System.out.println("Decrypted data");
+    }
+
+    public List<HashTableEntry> getEntries() {
+        return entries;
+    }
+
+    public void setEntries(List<HashTableEntry> entries) {
+        this.entries = entries;
+    }
+
+    public long size() {
+        return entries.size();
+    }
+
+    public HashTableEntry get(int initialEntry) {
+        return entries.get(initialEntry);
     }
 }

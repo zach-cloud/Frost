@@ -99,13 +99,36 @@ Instead of storing file names, for quick access MoPaQs use a fixed, power of two
 
 2.6 FILE DATA
 The data for each file is composed of the following structure:
-00h: int32(SectorsInFile + 1) SectorOffsetTable : Offsets to the start of each sector, relative to the beginning of the file data. The last entry contains the file size, making it possible to easily calculate the size of any given sector. This table is not present if this information can be calculated (see details below).
-immediately following SectorOffsetTable: SECTOR Sectors(SectorsInFile) : Data of each sector in the file, packed end to end (see details below).
+00h: int32(SectorsInFile + 1) SectorOffsetTable :
 
-Normally, file data is split up into sectors, for simple streaming. All sectors, save for the last, will contain as many bytes of file data as specified in the archive header's SectorSizeShift; the last sector may contain less than this, depending on the size of the entire file's data. If the file is compressed or imploded, the sector will be smaller or the same size as the file data it contains. Individual sectors in a compressed or imploded file may be stored uncompressed; this occurs if and only if the file data the sector contains could not be compressed by the algorithm(s) used (if the compressed sector size was greater than or equal to the size of the file data), and is indicated by the sector's size in SectorOffsetTable being equal to the size of the file data in the sector (which may be calculated from the FileSize).
+Offsets to the start of each sector, relative to the beginning of the file data.
+The last entry contains the file size, making it possible to easily calculate the size
+of any given sector. This table is not present if this information can be calculated (see details below).
+immediately following SectorOffsetTable: SECTOR Sectors(SectorsInFile) :
+Data of each sector in the file, packed end to end (see details below).
 
-The format of each sector depends on the kind of sector it is. Uncompressed sectors are simply the the raw file data contained in the sector. Imploded sectors are the raw compressed data following compression with the implode algorithm (these sectors can only be in imploded files). Compressed sectors (only found in compressed - not imploded - files) are compressed with one or more compression algorithms, and have the following structure:
-00h: byte CompressionMask : Mask of the compression types applied to this sector. If multiple compression types are used, they are applied in the order listed below, and decompression is performed in the opposite order. This byte counts towards the total sector size, meaning that the sector will be stored uncompressed if the data cannot be compressed by at least two bytes; as well, this byte is encrypted with the sector data, if applicable. The following compression types are defined (for implementations of these algorithms, see StormLib):
+Normally, file data is split up into sectors, for simple streaming. All sectors,
+save for the last, will contain as many bytes of file data as specified in the
+archive header's SectorSizeShift; the last sector may contain less than this,
+depending on the size of the entire file's data. If the file is compressed or
+imploded, the sector will be smaller or the same size as the file data it contains.
+Individual sectors in a compressed or imploded file may be stored uncompressed;
+this occurs if and only if the file data the sector contains could not be compressed
+by the algorithm(s) used (if the compressed sector size was greater than or equal
+to the size of the file data), and is indicated by the sector's size in SectorOffsetTable
+being equal to the size of the file data in the sector (which may be calculated from the FileSize).
+
+The format of each sector depends on the kind of sector it is. Uncompressed sectors are simply the
+the raw file data contained in the sector. Imploded sectors are the raw compressed data
+following compression with the implode algorithm (these sectors can only be in imploded files).
+Compressed sectors (only found in compressed - not imploded - files) are compressed with one or
+more compression algorithms, and have the following structure:
+00h: byte CompressionMask : Mask of the compression types applied to this sector. If multiple
+compression types are used, they are applied in the order listed below, and decompression is
+performed in the opposite order. This byte counts towards the total sector size, meaning that
+the sector will be stored uncompressed if the data cannot be compressed by at least two bytes;
+as well, this byte is encrypted with the sector data, if applicable. The following compression
+types are defined (for implementations of these algorithms, see StormLib):
 	40h: IMA ADPCM mono
 	80h: IMA ADPCM stereo
 	01h: Huffman encoded
@@ -114,11 +137,26 @@ The format of each sector depends on the kind of sector it is. Uncompressed sect
 	10h: BZip2 compressed (see BZip2)
 01h: byte(SectorSize - 1) SectorData : The compressed data for the sector.
 
-If the file is stored as a single unit (indicated in the file's Flags), there is effectively only a single sector, which contains the entire file data.
+If the file is stored as a single unit (indicated in the file's Flags),
+there is effectively only a single sector, which contains the entire file data.
 
-If the file is encrypted, each sector (after compression/implosion, if applicable) is encrypted with the file's key. The base key for a file is determined by a hash of the file name stripped of the directory (i.e. the key for a file named "directory\file" would be computed as the hash of "file"). If this key is adjusted, as indicated in the file's Flags, the final key is calculated as ((base key + BlockOffset - ArchiveOffset) XOR FileSize) (StormLib incorrectly uses an AND in place of the XOR). Each sector is encrypted using the key + the 0-based index of the sector in the file. The SectorOffsetTable, if present, is encrypted using the key - 1.
+If the file is encrypted, each sector (after compression/implosion, if applicable)
+is encrypted with the file's key. The base key for a file is determined by a
+hash of the file name stripped of the directory (i.e. the key for a file named
+"directory\file" would be computed as the hash of "file"). If this key is adjusted,
+as indicated in the file's Flags, the final key is calculated as
+((base key + BlockOffset - ArchiveOffset) XOR FileSize)
+(StormLib incorrectly uses an AND in place of the XOR). Each sector is encrypted using the key +
+ the 0-based index of the sector in the file. The SectorOffsetTable, if present, is encrypted using the key - 1.
 
-The SectorOffsetTable is omitted when the sizes and offsets of all sectors in the file are calculatable from the FileSize. This can happen in several circumstances. If the file is not compressed/imploded, then the size and offset of all sectors is known, based on the archive's SectorSizeShift. If the file is stored as a single unit compressed/imploded, then the SectorOffsetTable is omitted, as the single file "sector" corresponds to BlockSize and FileSize, as mentioned previously. However, the SectorOffsetTable will be present if the file is compressed/imploded and the file is not stored as a single unit, even if there is only a single sector in the file (the size of the file is less than or equal to the archive's sector size).
+The SectorOffsetTable is omitted when the sizes and offsets of all sectors in the file are calculatable
+from the FileSize. This can happen in several circumstances. If the file is not compressed/imploded
+, then the size and offset of all sectors is known, based on the archive's SectorSizeShift.
+If the file is stored as a single unit compressed/imploded, then the SectorOffsetTable is
+omitted, as the single file "sector" corresponds to BlockSize and FileSize, as mentioned
+previously. However, the SectorOffsetTable will be present if the file is compressed/imploded
+and the file is not stored as a single unit, even if there is only a single sector in the file
+ (the size of the file is less than or equal to the archive's sector size).
 
 2.7 LISTFILE
 The listfile is a very simple extension to the MoPaQ format that contains the file paths of (most) files in the archive. The languages and platforms of the files are not stored in the listfile. The listfile is contained in the file "(listfile)" (default language and platform), and is simply a text file with file paths separated by ';', 0Dh, 0Ah, or some combination of these. The file "(listfile)" may not be listed in the listfile.

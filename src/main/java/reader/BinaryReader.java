@@ -234,7 +234,7 @@ public class BinaryReader {
         return stream.position();
     }
 
-    public void setPosition(int blockTableStart) {
-        stream.position(blockTableStart);
+    public void setPosition(int start) {
+        stream.position(start);
     }
 }

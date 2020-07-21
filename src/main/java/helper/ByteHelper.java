@@ -54,4 +54,30 @@ public class ByteHelper {
     public static int byteToInt(byte[] src) {
         return byteToInt(src, ByteOrder.LITTLE_ENDIAN);
     }
+
+    /**
+     * Converts a 2-byte array into an int16
+     *
+     * @param src       Source array
+     * @param byteOrder Byte order
+     * @return          Short result
+     */
+    public static short byteToShort(byte[] src, ByteOrder byteOrder) {
+        if(src.length != 2) {
+            throw new IllegalArgumentException("Attempted to convert size " +
+                    src.length + " to short (invalid size)");
+        }
+        return ByteBuffer.wrap(src).order(byteOrder).getShort();
+    }
+
+    /**
+     * Converts a 4-byte array into an int32
+     * Little endian order
+     *
+     * @param src       Source array
+     * @return          Integer result
+     */
+    public static short byteToShort(byte[] src) {
+        return byteToShort(src, ByteOrder.LITTLE_ENDIAN);
+    }
 }

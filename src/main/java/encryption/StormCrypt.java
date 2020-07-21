@@ -1,11 +1,15 @@
 package encryption;
 
 import exception.EncryptionException;
+import exception.HashingException;
 import interfaces.IStormCrypt;
+import model.BlockTableEntry;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+import static encryption.StormConstants.MPQ_HASH_FILE_KEY;
+import static encryption.StormConstants.MPQ_HASH_TABLE_OFFSET;
 import static helper.ByteHelper.extractBytes;
 
 /**
@@ -19,6 +23,8 @@ public class StormCrypt implements IStormCrypt {
     private int ENCRYPTION_TABLE_SIZE = 0x500;
     private long SEED_INITIAL_VALUE = 0x00100001;
     private int INITIAL_ENCRYPT_SEED = 0xEEEEEEEE;
+
+
 
     /* StormCrypt table that is set on class startup. */
     private long[] encryptionTable;
@@ -66,6 +72,76 @@ public class StormCrypt implements IStormCrypt {
                 encryptionTable[index2] = (temp1 | temp2);
             }
         }
+    }
+
+    /**
+     * Converts given long to an int
+     *
+     * @param l Provided long
+     * @return  Converted int
+     */
+    public int asInt(long l) {
+        return (int)l;
+    }
+
+    /**
+     * Hashes the String using Storm algorithm and returns the key
+     * as an integer (rather than long)
+     *
+     * @param s         String to hash
+     * @param hashType  Hash type (see constants of this class; 0-3)
+     * @return          Hash value as int
+     */
+    public int hashAsInt(String s, int hashType) {
+        return asInt(hashString(s, hashType));
+    }
+
+    /**
+     * Hashes the String using Storm algorithm and returns the key
+     * as an long
+     *
+     * @param s         String to hash
+     * @param hashType  Hash type (see constants of this class; 0-3)
+     * @return          Hash value as long
+     */
+    public long hashString(String s, int hashType) {
+        if(s == null) {
+            throw new HashingException("Cannot hash a null String");
+        }
+        if(hashType > MPQ_HASH_FILE_KEY || hashType < MPQ_HASH_TABLE_OFFSET) {
+            throw new HashingException("Invalid hash type: " + hashType);
+        }
+        long seed1 = 0x7FED7FEDL;
+        long seed2 = 0xEEEEEEEEL;
+        int ch;
+
+        s = s.toUpperCase();
+        for(char c : s.toCharArray()) {
+            ch = c;
+            seed1 = encryptionTable[(hashType * 0x100) + ch] ^ (seed1 + seed2);
+            seed2 = ch + seed1 + seed2 + (seed2 << 5) + 3;
+        }
+        return seed1;
+    }
+
+    /**
+     * Hashes the String using Storm algorithm and returns the key
+     * as an integer (rather than long)
+     *
+     * @param filePath  Filename to hash
+     * @param entry     Block table entry corresponding to file
+     * @return File key as long
+     */
+    public long computeFileKey(String filePath, BlockTableEntry entry) {
+        if(filePath == null) {
+            throw new HashingException("Cannot hash a null file path");
+        }
+        filePath = filePath.replace("\\", "");
+        long fileKey = hashString(filePath, MPQ_HASH_FILE_KEY);
+        if(entry.isKeyAdjusted()) {
+            fileKey = (fileKey + entry.getBlockOffset()) ^ entry.getFileSize();
+        }
+        return fileKey;
     }
 
 

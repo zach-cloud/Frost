@@ -85,4 +85,28 @@ public class BlockTableEntry {
     public void setFlags(int flags) {
         this.flags = flags;
     }
+
+    public boolean isFile() {
+        return isFile;
+    }
+
+    public boolean isSingleUnit() {
+        return singleUnit;
+    }
+
+    public boolean isKeyAdjusted() {
+        return keyAdjusted;
+    }
+
+    public boolean isEncrypted() {
+        return encrypted;
+    }
+
+    public boolean isCompressed() {
+        return compressed;
+    }
+
+    public boolean isImploded() {
+        return imploded;
+    }
 }
