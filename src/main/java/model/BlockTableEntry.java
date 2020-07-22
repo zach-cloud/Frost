@@ -52,8 +52,6 @@ public class BlockTableEntry {
      * 	00000100h: File is imploded. File cannot be compressed.
      */
 
-
-
     public int getBlockOffset() {
         return blockOffset;
     }

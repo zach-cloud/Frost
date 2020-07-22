@@ -33,8 +33,6 @@ public class MpqObject implements IReadable {
     private StrongSignature strongSignature;
     private WeakSignature weakSignature;
 
-
-
     /**
      * Reads from the binary reader into this model object
      *
@@ -74,7 +72,7 @@ public class MpqObject implements IReadable {
         this.hashTable = new HashTable(stormCrypt, encryptedHashTable);
 
         // For each entry in the hash table/block table, read the associated file data
-        stormUtility.findEntry(hashTable, "war3map.j", StormConstants.ANY_LANGUAGE, StormConstants.ANY_PLATFORM);
+        //stormUtility.findEntry(hashTable, "war3map.j", StormConstants.ANY_LANGUAGE, StormConstants.ANY_PLATFORM);
         this.fileData = new ArrayList<>();
         for(HashTableEntry hashTableEntry: hashTable.getEntries()) {
             // We only care about entries with contents
@@ -82,21 +80,33 @@ public class MpqObject implements IReadable {
                     hashTableEntry.getFileBlockIndex() != StormConstants.MPQ_HASH_ENTRY_EMPTY) {
                 // Get associated block table entry
                 BlockTableEntry blockTableEntry = blockTable.get(hashTableEntry.getFileBlockIndex());
-                reader.setPosition(blockTableEntry.getBlockOffset() + headerStart);
-                FileDataEntry fileDataEntry = new FileDataEntry(archiveHeader, blockTableEntry, hashTableEntry);
+                FileDataEntry fileDataEntry = new FileDataEntry(headerStart, stormCrypt, blockTableEntry.getBlockOffset() + headerStart, archiveHeader, blockTableEntry, hashTableEntry);
+                System.out.println("Reading block table position: " + hashTableEntry.getFileBlockIndex());
+                if(hashTableEntry.getFileBlockIndex() == 18) {
+                    //System.out.println("Going to fail here...");
+                }
                 fileDataEntry.read(reader);
                 fileData.add(fileDataEntry);
             }
         }
+        System.out.println("Successfully read " + fileData.size() + " files.");
+        // TODO: Read the rest of this garbage. (extended stuff)
+    }
 
-//        fileData = new FileData();
-//        fileData.read(reader);
-//        hashTable = new HashTable();
-//        hashTable.read(reader);
-//
-//        extendedBlockTable = new ExtendedBlockTable();
-//        extendedBlockTable.read(reader);
-//        strongSignature = new StrongSignature();
-//        strongSignature.read(reader);
+    public boolean fileExists(String fileName) {
+        HashTableEntry entry = stormUtility.findEntry(hashTable, fileName, StormConstants.ANY_LANGUAGE, StormConstants.ANY_PLATFORM);
+        return entry != null;
+    }
+
+    public void extractFile(String fileName) {
+        HashTableEntry entry = stormUtility.findEntry(hashTable, fileName, StormConstants.ANY_LANGUAGE, StormConstants.ANY_PLATFORM);
+        if(entry == null) {
+            throw new RuntimeException("File does not exist: " + fileName);
+        }
+        for(FileDataEntry fileDataEntry: fileData) {
+            if(fileDataEntry.getHashTableEntry() == entry) {
+                fileDataEntry.extract(fileName);
+            }
+        }
     }
 }

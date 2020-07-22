@@ -1,31 +1,49 @@
 package model;
 
+import encryption.StormConstants;
+import encryption.StormCrypt;
 import interfaces.IReadable;
 import reader.BinaryReader;
 
 import java.io.IOException;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.List;
 
 public class FileDataEntry implements IReadable {
 
     private static int SECTOR_SIZE_BYTES = 4096;
 
+    private int initialPosition;
+    private int archiveOffset;
     private ArchiveHeader header;
     private BlockTableEntry blockTableEntry;
     private HashTableEntry hashTableEntry;
+    private StormCrypt stormCrypt;
 
-    private int sectorsInFile = 0;
+    private boolean isComplete;
+
+    private List<FileSector> sectors;
+    private List<FileSectorEntry> newSectors;
+
+    private int sectorsInFile;
 
     private int[] sectorOffsetTable;
-    private byte compressionMask;
 
     /**
      * Makes a new file data entry
      *
+     * @param initialPosition First byte of file data
      * @param header          MPQ header
      * @param blockTableEntry Associated block table entry
      * @param hashTableEntry  Associated hash table entry
      */
-    public FileDataEntry(ArchiveHeader header, BlockTableEntry blockTableEntry, HashTableEntry hashTableEntry) {
+    public FileDataEntry(int archiveOffset, StormCrypt stormCrypt, int initialPosition, ArchiveHeader header, BlockTableEntry blockTableEntry, HashTableEntry hashTableEntry) {
+        this.stormCrypt = stormCrypt;
+        this.initialPosition = initialPosition;
+        this.archiveOffset = archiveOffset;
+        this.sectors = new ArrayList<>();
+        this.newSectors = new ArrayList<>();
         this.header = header;
         this.blockTableEntry = blockTableEntry;
         this.hashTableEntry = hashTableEntry;
@@ -44,19 +62,105 @@ public class FileDataEntry implements IReadable {
      */
     @Override
     public void read(BinaryReader reader) {
+        reader.setPosition(initialPosition);
+
         try {
-            for (int i = 0; i < sectorsInFile + 1; i++) {
-                sectorOffsetTable[i] = reader.readInt();
+            if(!blockTableEntry.isSingleUnit() || blockTableEntry.isCompressed() || blockTableEntry.isImploded()) {
+                // For this one, we need to read the sector offset table.
+                System.out.println("Reading data with offset table");
+                readCompressedFiledata(reader);
+            } else {
+                System.out.println("Reading data without offset table");
+                // TODO...
             }
-            if(blockTableEntry.isCompressed()) {
-                compressionMask = reader.readByte();
-            }
-            System.out.println();
+
         } catch (IOException ex) {
             ex.printStackTrace();
         }
     }
 
+    private void readCompressedFiledata(BinaryReader reader) throws IOException {
+
+        // TODO: Extend this to work with multiple sectors.
+        int start = reader.readInt();
+        int end = reader.readInt();
+
+        FileSectorEntry entry = new FileSectorEntry(start, end, archiveOffset + blockTableEntry.getBlockOffset(), reader);
+        newSectors.add(entry);
+
+        isComplete = true;
+
+//        int readBytes = 0;
+//        int readTotalNormalSize = 0;
+//        // Read the sector offset table
+//        for (int i = 0; i < sectorsInFile + 1; i++) {
+//            sectorOffsetTable[i] = reader.readInt();
+//        }
+//
+//        if(!blockTableEntry.isEncrypted()) { // We need the key for decryption
+//
+//            // Read the full sectors
+//            for (int i = 0; i < sectorsInFile - 1; i++) {
+//                // Go to first part of this sector
+//                int sizeToRead = sectorOffsetTable[i + 1] - sectorOffsetTable[i];
+//                readSector(reader, initialPosition + sectorOffsetTable[i], sizeToRead, SECTOR_SIZE_BYTES);
+//                readBytes += sizeToRead;
+//                readTotalNormalSize += SECTOR_SIZE_BYTES;
+//            }
+//
+//            // Read the final sector
+//            int remainingNormalSize = blockTableEntry.getFileSize() - readTotalNormalSize;
+//            int remainingBytes = sectorOffsetTable[sectorOffsetTable.length - 1] - readBytes;
+//            readSector(reader, initialPosition + sectorOffsetTable[sectorsInFile - 1], remainingBytes, remainingNormalSize);
+//            reader.setPosition(initialPosition + sectorOffsetTable[sectorsInFile - 1]);
+//            readBytes += remainingBytes;
+//
+//            if (readBytes != sectorOffsetTable[sectorOffsetTable.length - 1]) {
+//                throw new RuntimeException("Failed assertion: read bytes did not equal total bytes");
+//            }
+//            isComplete = true;
+//        } else {
+//            isComplete = false;
+//        }
+    }
+
+    private void readSector(BinaryReader reader, int offset, int size, int normalSize) {
+        FileSector sector = new FileSector(size, normalSize, offset, blockTableEntry);
+        // We'll read it later.
+        // We don't want to store such a large amount of data in memory!
+        sector.readLater(reader);
+        sectors.add(sector);
+    }
+
+    private void decrypt(String fileName) {
+        if(fileName.contains("\\")) {
+            fileName = fileName.substring(fileName.indexOf("\\"));
+        }
+        int key = stormCrypt.hashAsInt(fileName, StormConstants.MPQ_HASH_FILE_KEY);
+        if(blockTableEntry.isKeyAdjusted()) {
+            key = (key + blockTableEntry.getBlockOffset() - archiveOffset) ^ blockTableEntry.getFileSize();
+        }
+        // TODO...
+    }
+
+    public BlockTableEntry getBlockTableEntry() {
+        return blockTableEntry;
+    }
+
+    public HashTableEntry getHashTableEntry() {
+        return hashTableEntry;
+    }
+
+    public void extract(String fileName) {
+        if(isComplete) {
+            System.out.println("Extracting: " + fileName);
+            for(FileSectorEntry sector : newSectors) {
+                sector.readSelf();
+            }
+        } else {
+            System.out.println("File cannot be extracted yet (not complete)");
+        }
+    }
     /*
     2.6 FILE DATA
 The data for each file is composed of the following structure:

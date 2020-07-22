@@ -14,6 +14,14 @@ public class CLI {
             inFile = inFile + ".w3x";
         }
         Mpq mpq = new Mpq(inFile);
+        System.out.println("Using extract action type...");
+        System.out.print("Enter filename to extract: ");
+        String fileName = scanner.nextLine();
+        if(mpq.fileExists(fileName)) {
+            mpq.extractFile(fileName);
+        } else {
+            System.out.println("File does not exist.");
+        }
     }
 
     public static void main(String[] args) {

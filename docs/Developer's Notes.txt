@@ -1,1 +1,16 @@
 - The spec incorrectly states SectorSizeShift as an int8. This is wrong - it is an int16.
+
+The war3map.j here should have 355 bytes when compressed, including the start byte which is 02.
+It goes:
+02
+120
+-100
+-99
+-109
+-51
+74
+
+Uncompressed has 1327 bytes.
+
+Addr start: 25,818
+            25,306

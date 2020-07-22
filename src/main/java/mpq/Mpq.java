@@ -63,4 +63,11 @@ public class Mpq {
         mpqObject.read(reader);
     }
 
+    public boolean fileExists(String fileName) {
+        return mpqObject.fileExists(fileName);
+    }
+
+    public void extractFile(String fileName) {
+        mpqObject.extractFile(fileName);
+    }
 }
