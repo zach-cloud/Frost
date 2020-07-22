@@ -18,13 +18,17 @@ import static helper.ByteHelper.extractBytes;
  */
 public class StormCrypt implements IStormCrypt {
 
+    private enum OperationType {
+        ENCRYPT,
+        DECRYPT
+    }
+
+    /* Defaults to little endian */
     private ByteOrder byteOrder;
 
     private int ENCRYPTION_TABLE_SIZE = 0x500;
     private long SEED_INITIAL_VALUE = 0x00100001;
     private int INITIAL_ENCRYPT_SEED = 0xEEEEEEEE;
-
-
 
     /* StormCrypt table that is set on class startup. */
     private long[] encryptionTable;
@@ -144,11 +148,6 @@ public class StormCrypt implements IStormCrypt {
         return fileKey;
     }
 
-
-    public long[] encrypt(long[] data, int length, long key) {
-       return null;
-    }
-
     /**
      * Transforms a byte array with length divisible by 4 into an array
      * Converts each integer contained in the byte array into an int
@@ -168,8 +167,36 @@ public class StormCrypt implements IStormCrypt {
     }
 
     /**
+     * Encrypts the specified integer array using the Storm encryption algorithm
+     * If input array is null, returns null
+     *
+     * @param src   Integer source array
+     * @param key   Key to encrypt with
+     * @return      Encrypted integer array
+     */
+    @Override
+    public int[] encrypt(int[] src, int key) {
+        if(src == null) {
+            return null;
+        }
+        int len = src.length;
+        int[] encryptedArray = new int[len];
+        int seed = INITIAL_ENCRYPT_SEED;
+        for(int i = 0; i < len; i++) {
+            seed += encryptionTable[0x400 + (key & 0xFF)];
+            int base = key + seed;
+            int current = src[i];
+            int res = current ^ base;
+            key = (~key << 21) + 0x11111111 | key >>> 11;
+            seed = (current + seed + (seed << 5) + 3);
+            encryptedArray[i] = res;
+        }
+        return encryptedArray;
+    }
+
+    /**
      * Decrypts integer array using Storm crypto algorithm.
-     * If input array is null, returns null;
+     * If input array is null, returns null
      *
      * @param src   Integer source array
      * @param key   Key to encrypt with
@@ -214,17 +241,14 @@ public class StormCrypt implements IStormCrypt {
     }
 
     /**
-     * Decrypts the specified bytes array.
-     * Uses the Storm algorithm
-     * Byte array must be divisible by 4 and contain
-     * integers in each four position (0-3, 4-7, etc)
-     * If a null array is provided, returns a null array.
+     * Generically encrypts/decrypts bytes.
      *
      * @param src   Source bytes array
-     * @param key   Key to encrypt with
-     * @return      Decrypted bytes array
+     * @param key   Key to decrypt with
+     * @param operationType Encrypt or decrypt
+     * @return      Modified bytes array
      */
-    public byte[] decryptBytes(byte[] src, int key) {
+    private byte[] modifyBytes(byte[] src, int key, OperationType operationType) {
         // Perform some checks...
         if(src == null) {
             return null;
@@ -236,13 +260,47 @@ public class StormCrypt implements IStormCrypt {
         // First, convert the byte array into an integer array that can
         // be used for the interface of Storm crypto
         int[] convertedNumericValues = transform(src);
-        int[] decrypted = decrypt(convertedNumericValues, key);
+        int[] modified = null;
+        if(operationType == OperationType.ENCRYPT) {
+            modified = encrypt(convertedNumericValues, key);
+        } else if(operationType == OperationType.DECRYPT) {
+            modified = decrypt(convertedNumericValues, key);
+        } else {
+            throw new EncryptionException("Unknown encryption type: " + operationType.name());
+        }
         // Cast back into byte array
-        return intArrayToBytes(decrypted);
+        return intArrayToBytes(modified);
     }
 
-    public byte[] encryptBytes(byte[] originData, int key) {
-        return null;
+    /**
+     * Decrypts the specified bytes array.
+     * Uses the Storm algorithm
+     * Byte array must be divisible by 4 and contain
+     * integers in each four position (0-3, 4-7, etc)
+     * If a null array is provided, returns a null array.
+     *
+     * @param src   Source bytes array
+     * @param key   Key to decrypt with
+     * @return      Decrypted bytes array
+     */
+    public byte[] decryptBytes(byte[] src, int key) {
+        return modifyBytes(src, key, OperationType.DECRYPT);
+    }
+
+    /**
+     * Encrypts the specified bytes array.
+     * Uses the Storm algorithm
+     * Byte array must be divisible by 4 and contain
+     * integers in each four position (0-3, 4-7, etc)
+     * If a null array is provided, returns a null array.
+     *
+     * @param src   Source bytes array
+     * @param key   Key to encrypt with
+     * @return      Encrypt bytes array
+     */
+    @Override
+    public byte[] encryptBytes(byte[] src, int key) {
+        return modifyBytes(src, key, OperationType.ENCRYPT);
     }
 
     /**
@@ -259,5 +317,48 @@ public class StormCrypt implements IStormCrypt {
     @Override
     public ByteBuffer decryptBuffer(ByteBuffer src, int key) {
         return ByteBuffer.wrap(decryptBytes(src.array(), key)).order(byteOrder);
+    }
+
+    /**
+     * Encrypts the specified byte buffer
+     * Uses the Storm algorithm
+     * Byte buffer size must be divisible by 4 and
+     * contain integers in each four position (0-3, 4-6, etc)
+     * If a null buffer is provided, returns a null buffer
+     *
+     * @param src Source buffer
+     * @param key Key to encrypt with
+     * @return Encrypted buffer
+     */
+    @Override
+    public ByteBuffer encryptBuffer(ByteBuffer src, int key) {
+        return ByteBuffer.wrap(encryptBytes(src.array(), key)).order(byteOrder);
+    }
+
+    private static void decryptTest() {
+        StormCrypt stormCrypt = new StormCrypt();
+        int key = -326913117;
+        int[] src = {1028155307, -905384187, -130797533, -398653375};
+        int[] res = stormCrypt.decrypt(src, key);
+        for(int i : res) {
+            System.out.println(i);
+        }
+    }
+
+    private static void encryptTest() {
+        StormCrypt stormCrypt = new StormCrypt();
+        int key = -326913117;
+        int[] src = {32,15524,116564,-2147483136};
+        int[] res = stormCrypt.encrypt(src, key);
+        for(int i : res) {
+            System.out.println(i);
+        }
+    }
+
+    public static void main(String[] args) {
+        System.out.println("DECRYPT");
+        decryptTest();
+        System.out.println("ENCRYPT");
+        encryptTest();
     }
 }

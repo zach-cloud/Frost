@@ -28,6 +28,16 @@ public interface IStormCrypt {
     byte[] decryptBytes(byte[] src, int key);
 
     /**
+     * Encrypts the specified integer array using the Storm encryption algorithm
+     * If input array is null, returns null
+     *
+     * @param src   Integer source array
+     * @param key   Key to encrypt with
+     * @return      Encrypted integer array
+     */
+    int[] encrypt(int[] src, int key);
+
+    /**
      * Decrypts the specified byte buffer
      * Uses the Storm algorithm
      * Byte buffer size must be divisible by 4 and
@@ -39,4 +49,31 @@ public interface IStormCrypt {
      * @return      Decrypted buffer
      */
     ByteBuffer decryptBuffer(ByteBuffer src, int key);
+
+    /**
+     * Encrypts the specified byte buffer
+     * Uses the Storm algorithm
+     * Byte buffer size must be divisible by 4 and
+     * contain integers in each four position (0-3, 4-6, etc)
+     * If a null buffer is provided, returns a null buffer
+     *
+     * @param src Source buffer
+     * @param key Key to encrypt with
+     * @return Encrypted buffer
+     */
+    ByteBuffer encryptBuffer(ByteBuffer src, int key);
+
+
+    /**
+     * Encrypts the specified bytes array.
+     * Uses the Storm algorithm
+     * Byte array must be divisible by 4 and contain
+     * integers in each four position (0-3, 4-7, etc)
+     * If a null array is provided, returns a null array.
+     *
+     * @param src   Source bytes array
+     * @param key   Key to encrypt with
+     * @return      Encrypt bytes array
+     */
+    byte[] encryptBytes(byte[] src, int key);
 }
