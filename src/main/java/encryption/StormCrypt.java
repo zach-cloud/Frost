@@ -15,6 +15,13 @@ import static helper.ByteHelper.extractBytes;
 /**
  * MPQ StormCrypt
  * Based on provided C++ code.
+ *
+ * Note that these encryption/hashing algorithms are
+ * extremely insecure and should NEVER be used for any
+ * sort of security use case.
+ *
+ * This is intended to ONLY be used to interface with the
+ * MPQ file format which uses these algorithms internally.
  */
 public class StormCrypt implements IStormCrypt {
 
@@ -79,16 +86,6 @@ public class StormCrypt implements IStormCrypt {
     }
 
     /**
-     * Converts given long to an int
-     *
-     * @param l Provided long
-     * @return  Converted int
-     */
-    public int asInt(long l) {
-        return (int)l;
-    }
-
-    /**
      * Hashes the String using Storm algorithm and returns the key
      * as an integer (rather than long)
      *
@@ -97,7 +94,7 @@ public class StormCrypt implements IStormCrypt {
      * @return          Hash value as int
      */
     public int hashAsInt(String s, int hashType) {
-        return asInt(hashString(s, hashType));
+        return (int)(hashString(s, hashType));
     }
 
     /**
