@@ -40,7 +40,7 @@ public class StormCryptStepDefs {
     public void bytes_are_encrypted_with_key(int key) {
         this.stormCrypt = new StormCrypt(new MpqContext());
         result = stormCrypt.encryptBytes(input, key);
-
+        resultByteBuffer = stormCrypt.encryptBuffer(inputByteBuffer, key);
     }
 
     @Then("result bytes should be:")
