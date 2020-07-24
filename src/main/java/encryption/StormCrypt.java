@@ -334,31 +334,4 @@ public class StormCrypt implements IStormCrypt {
     public ByteBuffer encryptBuffer(ByteBuffer src, int key) {
         return ByteBuffer.wrap(encryptBytes(src.array(), key)).order(byteOrder);
     }
-
-    private static void decryptTest() {
-        StormCrypt stormCrypt = new StormCrypt();
-        int key = -326913117;
-        int[] src = {1028155307, -905384187, -130797533, -398653375};
-        int[] res = stormCrypt.decrypt(src, key);
-        for(int i : res) {
-            System.out.println(i);
-        }
-    }
-
-    private static void encryptTest() {
-        StormCrypt stormCrypt = new StormCrypt();
-        int key = -326913117;
-        int[] src = {32,15524,116564,-2147483136};
-        int[] res = stormCrypt.encrypt(src, key);
-        for(int i : res) {
-            System.out.println(i);
-        }
-    }
-
-    public static void main(String[] args) {
-        System.out.println("DECRYPT");
-        decryptTest();
-        System.out.println("ENCRYPT");
-        encryptTest();
-    }
 }

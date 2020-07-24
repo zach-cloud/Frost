@@ -31,14 +31,14 @@ public class StormCryptStepDefs {
 
     @When("bytes are decrypted with key {int}")
     public void bytes_are_decrypted_with_key(int key) {
-        this.stormCrypt = new StormCrypt(new MpqContext());
+        this.stormCrypt = new StormCrypt();
         result = stormCrypt.decryptBytes(input, key);
         resultByteBuffer = stormCrypt.decryptBuffer(inputByteBuffer, key);
     }
 
     @When("bytes are encrypted with key {int}")
     public void bytes_are_encrypted_with_key(int key) {
-        this.stormCrypt = new StormCrypt(new MpqContext());
+        this.stormCrypt = new StormCrypt();
         result = stormCrypt.encryptBytes(input, key);
         resultByteBuffer = stormCrypt.encryptBuffer(inputByteBuffer, key);
     }
@@ -59,7 +59,7 @@ public class StormCryptStepDefs {
 
     @When("integer hash is computed with type {int}")
     public void integer_hash_is_computed(int type) {
-        this.stormCrypt = new StormCrypt(new MpqContext());
+        this.stormCrypt = new StormCrypt();
         intHash = stormCrypt.hashAsInt(toHash, type);
     }
 

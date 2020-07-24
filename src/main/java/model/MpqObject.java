@@ -48,7 +48,7 @@ public class MpqObject implements IReadable {
     @Override
     public void read(BinaryReader reader) {
         // Initialize helper components
-        this.stormCrypt = new StormCrypt(context);
+        this.stormCrypt = new StormCrypt();
         this.stormUtility = new StormUtility(stormCrypt, context);
 
         // Read header - starts at the beginning of MPQ Archive part
