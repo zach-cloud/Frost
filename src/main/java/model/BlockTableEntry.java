@@ -1,5 +1,7 @@
 package model;
 
+import settings.MpqContext;
+
 public class BlockTableEntry {
 
     private int blockOffset;
@@ -15,11 +17,14 @@ public class BlockTableEntry {
     private boolean compressed;
     private boolean imploded;
 
-    public BlockTableEntry(int blockOffset, int blockSize, int fileSize, int flags) {
+    private MpqContext context;
+
+    public BlockTableEntry(int blockOffset, int blockSize, int fileSize, int flags, MpqContext context) {
         this.blockOffset = blockOffset;
         this.blockSize = blockSize;
         this.fileSize = fileSize;
         this.flags = flags;
+        this.context = context;
         isFile = (flags & 0x80000000) != 0;
         singleUnit = (flags & 0x01000000) != 0;
         keyAdjusted = (flags & 0x00020000) != 0;
@@ -27,14 +32,14 @@ public class BlockTableEntry {
         compressed = (flags & 0x00000200) != 0;
         imploded = (flags & 0x00000100) != 0;
         if(keyAdjusted && !encrypted) {
-            throw new IllegalArgumentException("Block cannot be key adjusted and not encrypted");
+            context.getErrorHandler().handleError("Block cannot be key adjusted and not encrypted");
         }
         if(!isFile) {
             if(blockSize > 0) {
-                throw new IllegalArgumentException("Block is not a file but has size");
+                context.getErrorHandler().handleError("Block is not a file but has size");
             }
             if(singleUnit || keyAdjusted || encrypted || compressed || imploded) {
-                throw new IllegalArgumentException("Block is not a file but has flags");
+                context.getErrorHandler().handleError("Block is not a file but has flags");
             }
         }
     }

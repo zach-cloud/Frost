@@ -3,6 +3,7 @@ package model;
 import encryption.StormCrypt;
 import interfaces.IReadable;
 import reader.BinaryReader;
+import settings.MpqContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,18 +17,23 @@ public class HashTable {
     private static final int HASH_TABLE_ENTRY_SIZE = 16; // 16 bytes = 4 * int32
     private List<HashTableEntry> entries;
 
+    private MpqContext context;
+
     /**
      * Decrypts provided block table and parses the entries.
      *
      * @param stormCrypt            Encryption module with little endian order
      * @param encryptedHashTable    Encrypted hash table (read from file)
      */
-    public HashTable(StormCrypt stormCrypt, EncryptedHashTable encryptedHashTable) {
+    public HashTable(StormCrypt stormCrypt, EncryptedHashTable encryptedHashTable, MpqContext context) {
         entries = new ArrayList<>();
+        this.context = context;
         byte[] encryptedData = encryptedHashTable.getEncryptedData();
+        context.getLogger().debug("Attempting to decrypt hash table... key=" + HASH_TABLE_ENCRYPTION_KEY);
         byte[] decryptedData = stormCrypt.decryptBytes(encryptedData, HASH_TABLE_ENCRYPTION_KEY);
+        context.getLogger().debug("Decrypted bytes into: " + decryptedData.length);
         if(decryptedData.length % HASH_TABLE_ENTRY_SIZE != 0) {
-            throw new IllegalArgumentException("Could not convert decrypted bytes " +
+            context.getErrorHandler().handleCriticalError("Could not convert decrypted bytes " +
                     "into table entries (size = " + decryptedData.length + ")");
         }
 
@@ -38,10 +44,10 @@ public class HashTable {
             byte[] platform = extractBytes(decryptedData, 10 + (i * HASH_TABLE_ENTRY_SIZE), 2);
             byte[] fileBlockIndex = extractBytes(decryptedData, 12 + (i * HASH_TABLE_ENTRY_SIZE), 4);
             HashTableEntry entry = new HashTableEntry(byteToInt(filePathHashA), byteToInt(filePathHashB),
-                    byteToShort(language), byteToShort(platform), byteToInt(fileBlockIndex));
+                    byteToShort(language), byteToShort(platform), byteToInt(fileBlockIndex), context);
             entries.add(entry);
         }
-        System.out.println("Decrypted data");
+        context.getLogger().info("Hash table has " + entries.size() + " entries");
     }
 
     public List<HashTableEntry> getEntries() {

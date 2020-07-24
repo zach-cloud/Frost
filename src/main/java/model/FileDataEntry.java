@@ -4,6 +4,7 @@ import encryption.StormConstants;
 import encryption.StormCrypt;
 import interfaces.IReadable;
 import reader.BinaryReader;
+import settings.MpqContext;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -30,6 +31,8 @@ public class FileDataEntry implements IReadable {
 
     private int[] sectorOffsetTable;
 
+    private MpqContext context;
+
     /**
      * Makes a new file data entry
      *
@@ -38,7 +41,7 @@ public class FileDataEntry implements IReadable {
      * @param blockTableEntry Associated block table entry
      * @param hashTableEntry  Associated hash table entry
      */
-    public FileDataEntry(int archiveOffset, StormCrypt stormCrypt, int initialPosition, ArchiveHeader header, BlockTableEntry blockTableEntry, HashTableEntry hashTableEntry) {
+    public FileDataEntry(int archiveOffset, StormCrypt stormCrypt, int initialPosition, ArchiveHeader header, BlockTableEntry blockTableEntry, HashTableEntry hashTableEntry, MpqContext context) {
         this.stormCrypt = stormCrypt;
         this.initialPosition = initialPosition;
         this.archiveOffset = archiveOffset;
@@ -47,6 +50,7 @@ public class FileDataEntry implements IReadable {
         this.header = header;
         this.blockTableEntry = blockTableEntry;
         this.hashTableEntry = hashTableEntry;
+        this.context = context;
         sectorsInFile = blockTableEntry.getFileSize() / SECTOR_SIZE_BYTES;
         if (blockTableEntry.getFileSize() % SECTOR_SIZE_BYTES != 0) {
             // One sector holds remainder
@@ -67,10 +71,10 @@ public class FileDataEntry implements IReadable {
         try {
             if(!blockTableEntry.isSingleUnit() || blockTableEntry.isCompressed() || blockTableEntry.isImploded()) {
                 // For this one, we need to read the sector offset table.
-                System.out.println("Reading data with offset table");
+                context.getLogger().debug("Reading data with offset table");
                 readCompressedFiledata(reader);
             } else {
-                System.out.println("Reading data without offset table");
+                context.getLogger().debug("Reading data without offset table");
                 // TODO...
             }
 
@@ -85,7 +89,7 @@ public class FileDataEntry implements IReadable {
         int start = reader.readInt();
         int end = reader.readInt();
 
-        FileSectorEntry entry = new FileSectorEntry(start, end, archiveOffset + blockTableEntry.getBlockOffset(), reader);
+        FileSectorEntry entry = new FileSectorEntry(start, end, archiveOffset + blockTableEntry.getBlockOffset(), reader, context);
         newSectors.add(entry);
 
         isComplete = true;
@@ -125,7 +129,7 @@ public class FileDataEntry implements IReadable {
     }
 
     private void readSector(BinaryReader reader, int offset, int size, int normalSize) {
-        FileSector sector = new FileSector(size, normalSize, offset, blockTableEntry);
+        FileSector sector = new FileSector(size, normalSize, offset, blockTableEntry, context);
         // We'll read it later.
         // We don't want to store such a large amount of data in memory!
         sector.readLater(reader);
@@ -153,12 +157,12 @@ public class FileDataEntry implements IReadable {
 
     public void extract(String fileName) {
         if(isComplete) {
-            System.out.println("Extracting: " + fileName);
+            context.getLogger().info("Extracting: " + fileName);
             for(FileSectorEntry sector : newSectors) {
                 sector.readSelf();
             }
         } else {
-            System.out.println("File cannot be extracted yet (not complete)");
+            context.getErrorHandler().handleError("File cannot be extracted yet (not complete)");
         }
     }
     /*
@@ -198,7 +202,7 @@ types are defined (for implementations of these algorithms, see StormLib):
 	80h: IMA ADPCM stereo
 	01h: Huffman encoded
 	02h: Deflated (see ZLib)
-	08h: Imploded (see PKWare Data Compression Library)
+	08h: Imploded (see PKWare Data IGenericCompression Library)
 	10h: BZip2 compressed (see BZip2)
 01h: byte(SectorSize - 1) SectorData : The compressed data for the sector.
 

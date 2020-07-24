@@ -1,11 +1,17 @@
+package stepDefs;
+
 import encryption.StormCrypt;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.junit.Assert;
+import settings.MpqContext;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+
+import static utils.ByteUtils.bytesToString;
+import static utils.ByteUtils.stringToBytes;
 
 public class StormCryptStepDefs {
 
@@ -17,24 +23,6 @@ public class StormCryptStepDefs {
     private String toHash;
     private int intHash;
 
-    private static String bytesToString(byte[] ar) {
-        StringBuilder builder = new StringBuilder();
-        for(int i = 0; i < ar.length; i++) {
-            builder.append(ar[i]).append(",");
-        }
-        builder.setLength(builder.length()-1);
-        return builder.toString();
-    }
-
-    private static byte[] stringToBytes(String s) {
-        String[] split = s.split(",");
-        byte[] ar = new byte[split.length];
-        for(int i = 0; i < split.length; i++) {
-            ar[i] = (byte)Integer.parseInt(split[i]);
-        }
-        return ar;
-    }
-
     @Given("bytes:")
     public void bytes(String bytesBody) {
         input = stringToBytes(bytesBody);
@@ -43,14 +31,14 @@ public class StormCryptStepDefs {
 
     @When("bytes are decrypted with key {int}")
     public void bytes_are_decrypted_with_key(int key) {
-        this.stormCrypt = new StormCrypt();
+        this.stormCrypt = new StormCrypt(new MpqContext());
         result = stormCrypt.decryptBytes(input, key);
         resultByteBuffer = stormCrypt.decryptBuffer(inputByteBuffer, key);
     }
 
     @When("bytes are encrypted with key {int}")
     public void bytes_are_encrypted_with_key(int key) {
-        this.stormCrypt = new StormCrypt();
+        this.stormCrypt = new StormCrypt(new MpqContext());
         result = stormCrypt.encryptBytes(input, key);
 
     }
@@ -71,7 +59,7 @@ public class StormCryptStepDefs {
 
     @When("integer hash is computed with type {int}")
     public void integer_hash_is_computed(int type) {
-        this.stormCrypt = new StormCrypt();
+        this.stormCrypt = new StormCrypt(new MpqContext());
         intHash = stormCrypt.hashAsInt(toHash, type);
     }
 

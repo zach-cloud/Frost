@@ -1,5 +1,7 @@
 package model;
 
+import settings.MpqContext;
+
 public class HashTableEntry {
 
     private int filePathHashA;
@@ -7,6 +9,7 @@ public class HashTableEntry {
     private short language;
     private short platform;
     private int fileBlockIndex;
+    private MpqContext context;
 
     /*
     00h: int32 FilePathHashA : The hash of the file path, using method A.
@@ -39,11 +42,12 @@ public class HashTableEntry {
         return fileBlockIndex;
     }
 
-    public HashTableEntry(int filePathHashA, int filePathHashB, short language, short platform, int fileBlockIndex) {
+    public HashTableEntry(int filePathHashA, int filePathHashB, short language, short platform, int fileBlockIndex, MpqContext context) {
         this.filePathHashA = filePathHashA;
         this.filePathHashB = filePathHashB;
         this.language = language;
         this.platform = platform;
         this.fileBlockIndex = fileBlockIndex;
+        this.context = context;
     }
 }

@@ -2,6 +2,7 @@ package model;
 
 import interfaces.IReadable;
 import reader.BinaryReader;
+import settings.MpqContext;
 
 import java.io.IOException;
 
@@ -16,12 +17,14 @@ public class FileSector implements IReadable {
     private byte flags;
     private byte[] data;
 
+    private MpqContext context;
+
     /*
     	40h: IMA ADPCM mono
 	80h: IMA ADPCM stereo
 	01h: Huffman encoded
 	02h: Deflated (see ZLib)
-	08h: Imploded (see PKWare Data Compression Library)
+	08h: Imploded (see PKWare Data IGenericCompression Library)
 	10h: BZip2 compressed (see BZip2)
      */
 
@@ -33,11 +36,12 @@ public class FileSector implements IReadable {
     private static final byte BZIP2 = 0x10;
 
 
-    public FileSector(int size, int normalSize, int position, BlockTableEntry entry) {
+    public FileSector(int size, int normalSize, int position, BlockTableEntry entry, MpqContext context) {
         this.entry = entry;
         this.size = size;
         this.normalSize = normalSize;
         this.position = position;
+        this.context = context;
     }
 
     /**
@@ -60,7 +64,7 @@ public class FileSector implements IReadable {
 
                 byte[] compressedData = reader.readBytes(size - 1);
 
-                System.out.println(new String(compressedData));
+                context.getLogger().debug(new String(compressedData));
             }
         } catch (IOException ex) {
             ex.printStackTrace();

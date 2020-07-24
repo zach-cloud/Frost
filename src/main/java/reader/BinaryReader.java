@@ -1,6 +1,7 @@
 package reader;
 
 import org.apache.commons.io.IOUtils;
+import settings.MpqContext;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -12,12 +13,16 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * Helper class for reading binary files (such as MPQs)
+ */
 public class BinaryReader {
 
     private ByteOrder byteOrder;
     private ByteBuffer stream;
     private List<Integer> undoStack;
     private int lastReadBytes = 0;
+    private MpqContext context;
 
     /**
      * Makes a new binary reader with file contents
@@ -25,17 +30,19 @@ public class BinaryReader {
      * @param origin    File to set for reader
      * @param byteOrder Byte order (little/big endian)
      */
-    public BinaryReader(File origin, ByteOrder byteOrder) {
+    public BinaryReader(File origin, ByteOrder byteOrder, MpqContext context) {
         try {
             byte[] fileData = IOUtils.toByteArray(new FileInputStream(origin));
             stream = ByteBuffer.allocate(fileData.length);
             stream.put(fileData);
             stream.order(byteOrder);
+            // Ignore this warning. It's not redundant. Code in JAR form fails without cast!!
             ((Buffer)stream).flip();
             this.undoStack = new LinkedList<>();
             this.byteOrder = byteOrder;
+            this.context = context;
         } catch (IOException ex) {
-            throw new IllegalArgumentException("Cannot read file: " + origin.getAbsolutePath());
+            context.getErrorHandler().handleCriticalError("Cannot read file: " + origin.getAbsolutePath());
         }
     }
 
@@ -45,8 +52,8 @@ public class BinaryReader {
      *
      * @param origin    File to set for reader
      */
-    public BinaryReader(File origin) {
-        this(origin, ByteOrder.LITTLE_ENDIAN);
+    public BinaryReader(File origin, MpqContext context) {
+        this(origin, ByteOrder.LITTLE_ENDIAN, context);
     }
 
     public void goTo(String flag) throws IOException {
@@ -82,7 +89,7 @@ public class BinaryReader {
      */
     public void undo() {
         if(undoStack.size() == 0) {
-            throw new IllegalArgumentException("Attempted to undo a non-existent operation");
+            context.getErrorHandler().handleError("Attempted to undo a non-existent operation");
         }
         int adjustment = undoStack.remove(undoStack.size()-1);
         stream.position(stream.position() - adjustment);

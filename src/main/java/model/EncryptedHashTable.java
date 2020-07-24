@@ -2,6 +2,7 @@ package model;
 
 import interfaces.IReadable;
 import reader.BinaryReader;
+import settings.MpqContext;
 
 import java.io.IOException;
 
@@ -13,8 +14,11 @@ public class EncryptedHashTable implements IReadable {
 
     private int entryCount;
 
-    public EncryptedHashTable (int entryCount) {
+    private MpqContext context;
+
+    public EncryptedHashTable (int entryCount, MpqContext context) {
         this.entryCount = entryCount;
+        this.context = context;
     }
 
     /**
@@ -27,7 +31,7 @@ public class EncryptedHashTable implements IReadable {
         try {
             int size = entryCount * BYTES_PER_BLOCK_TABLE_ENTRY;
             encryptedData = reader.readBytes(size);
-            System.out.println("Read " + size + " bytes as encrypted hash table");
+            context.getLogger().debug("Read " + size + " bytes as encrypted hash table");
         } catch (IOException ex) {
             ex.printStackTrace();
         }

@@ -2,6 +2,7 @@ package model;
 
 import interfaces.IReadable;
 import reader.BinaryReader;
+import settings.MpqContext;
 
 import java.io.IOException;
 
@@ -13,9 +14,11 @@ public class EncryptedBlockTable implements IReadable {
     private byte[] encryptedData;
 
     private int entryCount;
+    private MpqContext context;
 
-    public EncryptedBlockTable (int entryCount) {
+    public EncryptedBlockTable (int entryCount, MpqContext context) {
         this.entryCount = entryCount;
+        this.context = context;
     }
 
     public byte[] getEncryptedData() {
@@ -32,7 +35,7 @@ public class EncryptedBlockTable implements IReadable {
         try {
             int size = entryCount * BYTES_PER_BLOCK_TABLE_ENTRY;
             encryptedData = reader.readBytes(size);
-            System.out.println("Read " + size + " bytes as encrypted block table");
+            context.getLogger().debug("Read " + size + " bytes as encrypted block table");
         } catch (IOException ex) {
             ex.printStackTrace();
         }

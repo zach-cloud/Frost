@@ -2,6 +2,7 @@ package model;
 
 
 import encryption.StormCrypt;
+import settings.MpqContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,31 +15,35 @@ public class BlockTable {
     private static final int BLOCK_TABLE_ENTRY_SIZE = 16; // 16 bytes = 4 * int32
     private List<BlockTableEntry> entries;
 
+    private MpqContext context;
+
     /**
      * Decrypts provided block table and parses the entries.
      *
      * @param stormCrypt            Encryption module with little endian order
      * @param encryptedBlockTable   Encrypted block table (read from file)
      */
-    public BlockTable(StormCrypt stormCrypt, EncryptedBlockTable encryptedBlockTable) {
+    public BlockTable(StormCrypt stormCrypt, EncryptedBlockTable encryptedBlockTable, MpqContext context) {
+        this.context = context;
         entries = new ArrayList<>();
         byte[] encryptedData = encryptedBlockTable.getEncryptedData();
+        context.getLogger().debug("Attempting to decrypt block table... key=" + BLOCK_TABLE_ENCRYPTION_KEY);
         byte[] decryptedData = stormCrypt.decryptBytes(encryptedData, BLOCK_TABLE_ENCRYPTION_KEY);
+        context.getLogger().debug("Decrypted bytes into: " + decryptedData.length);
         if(decryptedData.length % BLOCK_TABLE_ENTRY_SIZE != 0) {
-            throw new IllegalArgumentException("Could not convert decrypted bytes " +
+            context.getErrorHandler().handleCriticalError("Could not convert decrypted bytes " +
                     "into table entries (size = " + decryptedData.length + ")");
         }
-
         for(int i = 0 ; i < decryptedData.length / BLOCK_TABLE_ENTRY_SIZE; i++) {
             byte[] blockOffset = extractBytes(decryptedData, i * BLOCK_TABLE_ENTRY_SIZE, 4);
             byte[] blockSize = extractBytes(decryptedData, 4 + (i * BLOCK_TABLE_ENTRY_SIZE), 4);
             byte[] fileSize = extractBytes(decryptedData, 8 + (i * BLOCK_TABLE_ENTRY_SIZE), 4);
             byte[] flags = extractBytes(decryptedData, 12 + (i * BLOCK_TABLE_ENTRY_SIZE), 4);
             BlockTableEntry entry = new BlockTableEntry(byteToInt(blockOffset),
-                    byteToInt(blockSize), byteToInt(fileSize), byteToInt(flags));
+                    byteToInt(blockSize), byteToInt(fileSize), byteToInt(flags), context);
             entries.add(entry);
         }
-        System.out.println("Decrypted data");
+        context.getLogger().info("Block table has " + entries.size() + " entries");
     }
 
     public BlockTableEntry get(int index) {

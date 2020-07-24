@@ -1,6 +1,7 @@
 package cli;
 
 import mpq.Mpq;
+import settings.MpqSettings;
 
 import java.util.Scanner;
 
@@ -13,7 +14,9 @@ public class CLI {
         if(!inFile.endsWith(".w3x")) {
             inFile = inFile + ".w3x";
         }
-        Mpq mpq = new Mpq(inFile);
+        MpqSettings settings = new MpqSettings(MpqSettings.LogSettings.DEBUG);
+
+        Mpq mpq = new Mpq(inFile, settings);
         System.out.println("Using extract action type...");
         System.out.print("Enter filename to extract: ");
         String fileName = scanner.nextLine();

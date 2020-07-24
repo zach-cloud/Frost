@@ -1,10 +1,11 @@
 package helper;
 
-import exception.EncryptionException;
-
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+/**
+ * Helper functions for byte operations.
+ */
 public class ByteHelper {
 
     /**

@@ -4,15 +4,18 @@ import encryption.StormConstants;
 import encryption.StormCrypt;
 import model.HashTable;
 import model.HashTableEntry;
+import settings.MpqContext;
 
 import static encryption.StormConstants.*;
 
 public class StormUtility {
 
     private StormCrypt stormCrypt;
+    private MpqContext context;
 
-    public StormUtility(StormCrypt stormCrypt) {
+    public StormUtility(StormCrypt stormCrypt, MpqContext context) {
         this.stormCrypt = stormCrypt;
+        this.context = context;
     }
 
     /**

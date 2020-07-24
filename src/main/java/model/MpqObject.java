@@ -5,6 +5,7 @@ import encryption.StormCrypt;
 import helper.StormUtility;
 import interfaces.IReadable;
 import reader.BinaryReader;
+import settings.MpqContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +34,12 @@ public class MpqObject implements IReadable {
     private StrongSignature strongSignature;
     private WeakSignature weakSignature;
 
+    private MpqContext context;
+
+    public MpqObject(MpqContext context) {
+        this.context = context;
+    }
+
     /**
      * Reads from the binary reader into this model object
      *
@@ -41,11 +48,11 @@ public class MpqObject implements IReadable {
     @Override
     public void read(BinaryReader reader) {
         // Initialize helper components
-        this.stormCrypt = new StormCrypt();
-        this.stormUtility = new StormUtility(stormCrypt);
+        this.stormCrypt = new StormCrypt(context);
+        this.stormUtility = new StormUtility(stormCrypt, context);
 
         // Read header - starts at the beginning of MPQ Archive part
-        archiveHeader = new ArchiveHeader();
+        archiveHeader = new ArchiveHeader(context);
         archiveHeader.read(reader);
 
         // Save positions
@@ -61,15 +68,15 @@ public class MpqObject implements IReadable {
 
         // Read block table, starting at offset
         reader.setPosition(blockTableStart);
-        this.encryptedBlockTable = new EncryptedBlockTable(archiveHeader.getBlockTableEntries());
+        this.encryptedBlockTable = new EncryptedBlockTable(archiveHeader.getBlockTableEntries(), context);
         encryptedBlockTable.read(reader);
-        this.blockTable = new BlockTable(stormCrypt, encryptedBlockTable);
+        this.blockTable = new BlockTable(stormCrypt, encryptedBlockTable, context);
 
         // Read the hash table, starting at offset
         reader.setPosition(hashTableStart);
-        this.encryptedHashTable = new EncryptedHashTable(archiveHeader.getHashTableEntries());
+        this.encryptedHashTable = new EncryptedHashTable(archiveHeader.getHashTableEntries(), context);
         encryptedHashTable.read(reader);
-        this.hashTable = new HashTable(stormCrypt, encryptedHashTable);
+        this.hashTable = new HashTable(stormCrypt, encryptedHashTable, context);
 
         // For each entry in the hash table/block table, read the associated file data
         //stormUtility.findEntry(hashTable, "war3map.j", StormConstants.ANY_LANGUAGE, StormConstants.ANY_PLATFORM);
@@ -80,8 +87,8 @@ public class MpqObject implements IReadable {
                     hashTableEntry.getFileBlockIndex() != StormConstants.MPQ_HASH_ENTRY_EMPTY) {
                 // Get associated block table entry
                 BlockTableEntry blockTableEntry = blockTable.get(hashTableEntry.getFileBlockIndex());
-                FileDataEntry fileDataEntry = new FileDataEntry(headerStart, stormCrypt, blockTableEntry.getBlockOffset() + headerStart, archiveHeader, blockTableEntry, hashTableEntry);
-                System.out.println("Reading block table position: " + hashTableEntry.getFileBlockIndex());
+                FileDataEntry fileDataEntry = new FileDataEntry(headerStart, stormCrypt, blockTableEntry.getBlockOffset() + headerStart, archiveHeader, blockTableEntry, hashTableEntry, context);
+                context.getLogger().debug("Reading block table entry position=" + hashTableEntry.getFileBlockIndex());
                 if(hashTableEntry.getFileBlockIndex() == 18) {
                     //System.out.println("Going to fail here...");
                 }
@@ -89,7 +96,7 @@ public class MpqObject implements IReadable {
                 fileData.add(fileDataEntry);
             }
         }
-        System.out.println("Successfully read " + fileData.size() + " files.");
+        context.getLogger().info("Successfully read " + fileData.size() + " files.");
         // TODO: Read the rest of this garbage. (extended stuff)
     }
 
@@ -101,7 +108,7 @@ public class MpqObject implements IReadable {
     public void extractFile(String fileName) {
         HashTableEntry entry = stormUtility.findEntry(hashTable, fileName, StormConstants.ANY_LANGUAGE, StormConstants.ANY_PLATFORM);
         if(entry == null) {
-            throw new RuntimeException("File does not exist: " + fileName);
+            context.getErrorHandler().handleCriticalError("File does not exist: " + fileName);
         }
         for(FileDataEntry fileDataEntry: fileData) {
             if(fileDataEntry.getHashTableEntry() == entry) {

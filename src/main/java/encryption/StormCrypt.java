@@ -4,6 +4,7 @@ import exception.EncryptionException;
 import exception.HashingException;
 import interfaces.IStormCrypt;
 import model.BlockTableEntry;
+import settings.MpqContext;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -19,13 +20,12 @@ import static helper.ByteHelper.extractBytes;
 public class StormCrypt implements IStormCrypt {
 
     private ByteOrder byteOrder;
+    private MpqContext context;
 
     private int ENCRYPTION_TABLE_SIZE = 0x500;
     private long SEED_INITIAL_VALUE = 0x00100001;
     private int INITIAL_ENCRYPT_SEED = 0xEEEEEEEE;
-
-
-
+    
     /* StormCrypt table that is set on class startup. */
     private long[] encryptionTable;
 
@@ -33,8 +33,8 @@ public class StormCrypt implements IStormCrypt {
      * Creates a new StormCrypt with default parameters
      * and little endian byteorder.
      */
-    public StormCrypt() {
-        this(ByteOrder.LITTLE_ENDIAN);
+    public StormCrypt(MpqContext context) {
+        this(ByteOrder.LITTLE_ENDIAN, context);
     }
 
     /**
@@ -43,10 +43,11 @@ public class StormCrypt implements IStormCrypt {
      *
      * @param byteOrder Byte order to use (little or big)
      */
-    public StormCrypt(ByteOrder byteOrder) {
+    public StormCrypt(ByteOrder byteOrder, MpqContext context) {
         this.encryptionTable = new long[ENCRYPTION_TABLE_SIZE];
         this.initializeEncryptionTable();
         this.byteOrder = byteOrder;
+        this.context = context;
     }
 
     /**
