@@ -1,13 +1,14 @@
 package model;
 
 import encryption.StormConstants;
-import encryption.StormCrypt;
+import encryption.StormSecurity;
 import interfaces.IReadable;
 import reader.BinaryReader;
 import settings.MpqContext;
 
+import java.io.File;
 import java.io.IOException;
-import java.io.Reader;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,7 +21,7 @@ public class FileDataEntry implements IReadable {
     private ArchiveHeader header;
     private BlockTableEntry blockTableEntry;
     private HashTableEntry hashTableEntry;
-    private StormCrypt stormCrypt;
+    private StormSecurity stormSecurity;
 
     private boolean isComplete;
 
@@ -32,6 +33,7 @@ public class FileDataEntry implements IReadable {
     private int[] sectorOffsetTable;
 
     private MpqContext context;
+    private BinaryReader reader;
 
     /**
      * Makes a new file data entry
@@ -41,8 +43,8 @@ public class FileDataEntry implements IReadable {
      * @param blockTableEntry Associated block table entry
      * @param hashTableEntry  Associated hash table entry
      */
-    public FileDataEntry(int archiveOffset, StormCrypt stormCrypt, int initialPosition, ArchiveHeader header, BlockTableEntry blockTableEntry, HashTableEntry hashTableEntry, MpqContext context) {
-        this.stormCrypt = stormCrypt;
+    public FileDataEntry(int archiveOffset, StormSecurity stormSecurity, int initialPosition, ArchiveHeader header, BlockTableEntry blockTableEntry, HashTableEntry hashTableEntry, MpqContext context) {
+        this.stormSecurity = stormSecurity;
         this.initialPosition = initialPosition;
         this.archiveOffset = archiveOffset;
         this.sectors = new ArrayList<>();
@@ -59,20 +61,14 @@ public class FileDataEntry implements IReadable {
         this.sectorOffsetTable = new int[sectorsInFile + 1];
     }
 
-    /**
-     * Reads from the binary reader into this model object
-     *
-     * @param reader Binary reader
-     */
-    @Override
-    public void read(BinaryReader reader) {
+    private void read(BinaryReader reader, int key) {
         reader.setPosition(initialPosition);
 
         try {
             if(!blockTableEntry.isSingleUnit() || blockTableEntry.isCompressed() || blockTableEntry.isImploded()) {
                 // For this one, we need to read the sector offset table.
                 context.getLogger().debug("Reading data with offset table");
-                readCompressedFiledata(reader);
+                readCompressedFiledata(reader, key);
             } else {
                 context.getLogger().debug("Reading data without offset table");
                 // TODO...
@@ -83,68 +79,64 @@ public class FileDataEntry implements IReadable {
         }
     }
 
-    private void readCompressedFiledata(BinaryReader reader) throws IOException {
+    /**
+     * Reads from the binary reader into this model object
+     *
+     * @param reader Binary reader
+     */
+    @Override
+    public void read(BinaryReader reader) {
+        read(reader, -1);
+    }
 
-        // TODO: Extend this to work with multiple sectors.
-        int start = reader.readInt();
-        int end = reader.readInt();
+    private void readCompressedFiledata(BinaryReader reader, int key) throws IOException {
 
-        FileSectorEntry entry = new FileSectorEntry(start, end, archiveOffset + blockTableEntry.getBlockOffset(), reader, context);
-        newSectors.add(entry);
+        if(blockTableEntry.isEncrypted() && key == -1) {
+            this.reader = reader; // Now we need to save the reader.
+            return;
+            // We'll need to do this later...
+            // Should find a cleaner way of doing this.
+        }
+
+        int totalReadBytes = 0;
+
+        // Build the offset table
+        for(int i = 0; i < sectorsInFile + 1; i++) {
+            sectorOffsetTable[i] = reader.readInt();
+        }
+
+        if(blockTableEntry.isEncrypted()) {
+            sectorOffsetTable = stormSecurity.decrypt(sectorOffsetTable, key - 1);
+        }
+
+        // Use the offset table to compute each sector position and size
+        for(int i = 0; i < sectorsInFile; i++) {
+            int start = sectorOffsetTable[i];
+            int end = sectorOffsetTable[i + 1];
+
+            // Easily computed as end - start since that is the amount of bytes we'll read
+            int compressedSectorSize = end - start; // TODO
+            // If this isn't the final sector, then the size is SECTOR_SIZE_BYTES
+            // If it is the final sector... we need to accumulate bytes throughout
+            // and total them up, then do fileSize - readBytes
+            int realSectorSize = 0; // TODO
+            if(i != sectorsInFile - 1) {
+                realSectorSize = SECTOR_SIZE_BYTES;
+                totalReadBytes += SECTOR_SIZE_BYTES;
+            } else {
+                // The file size minus the read bytes provides us
+                // the actual file size of the final sector
+                realSectorSize = blockTableEntry.getFileSize() - totalReadBytes;
+            }
+
+            FileSectorEntry entry = new FileSectorEntry(start, end,
+                    archiveOffset + blockTableEntry.getBlockOffset(),
+                    compressedSectorSize, realSectorSize, true, blockTableEntry.isEncrypted(),
+                    key, reader, context, stormSecurity);
+            newSectors.add(entry);
+        }
 
         isComplete = true;
-
-//        int readBytes = 0;
-//        int readTotalNormalSize = 0;
-//        // Read the sector offset table
-//        for (int i = 0; i < sectorsInFile + 1; i++) {
-//            sectorOffsetTable[i] = reader.readInt();
-//        }
-//
-//        if(!blockTableEntry.isEncrypted()) { // We need the key for decryption
-//
-//            // Read the full sectors
-//            for (int i = 0; i < sectorsInFile - 1; i++) {
-//                // Go to first part of this sector
-//                int sizeToRead = sectorOffsetTable[i + 1] - sectorOffsetTable[i];
-//                readSector(reader, initialPosition + sectorOffsetTable[i], sizeToRead, SECTOR_SIZE_BYTES);
-//                readBytes += sizeToRead;
-//                readTotalNormalSize += SECTOR_SIZE_BYTES;
-//            }
-//
-//            // Read the final sector
-//            int remainingNormalSize = blockTableEntry.getFileSize() - readTotalNormalSize;
-//            int remainingBytes = sectorOffsetTable[sectorOffsetTable.length - 1] - readBytes;
-//            readSector(reader, initialPosition + sectorOffsetTable[sectorsInFile - 1], remainingBytes, remainingNormalSize);
-//            reader.setPosition(initialPosition + sectorOffsetTable[sectorsInFile - 1]);
-//            readBytes += remainingBytes;
-//
-//            if (readBytes != sectorOffsetTable[sectorOffsetTable.length - 1]) {
-//                throw new RuntimeException("Failed assertion: read bytes did not equal total bytes");
-//            }
-//            isComplete = true;
-//        } else {
-//            isComplete = false;
-//        }
-    }
-
-    private void readSector(BinaryReader reader, int offset, int size, int normalSize) {
-        FileSector sector = new FileSector(size, normalSize, offset, blockTableEntry, context);
-        // We'll read it later.
-        // We don't want to store such a large amount of data in memory!
-        sector.readLater(reader);
-        sectors.add(sector);
-    }
-
-    private void decrypt(String fileName) {
-        if(fileName.contains("\\")) {
-            fileName = fileName.substring(fileName.indexOf("\\"));
-        }
-        int key = stormCrypt.hashAsInt(fileName, StormConstants.MPQ_HASH_FILE_KEY);
-        if(blockTableEntry.isKeyAdjusted()) {
-            key = (key + blockTableEntry.getBlockOffset() - archiveOffset) ^ blockTableEntry.getFileSize();
-        }
-        // TODO...
     }
 
     public BlockTableEntry getBlockTableEntry() {
@@ -155,14 +147,43 @@ public class FileDataEntry implements IReadable {
         return hashTableEntry;
     }
 
-    public void extract(String fileName) {
+    public void extract(String fileName, File target) {
+        int key = -1;
+        if(blockTableEntry.isEncrypted()) {
+            if(fileName.contains("\\")) {
+                fileName = fileName.substring(fileName.indexOf("\\"));
+            }
+            key = stormSecurity.hashAsInt(fileName, StormConstants.MPQ_HASH_FILE_KEY);
+            if(blockTableEntry.isKeyAdjusted()) {
+                key = (key + blockTableEntry.getBlockOffset()) ^ blockTableEntry.getFileSize();
+            }
+        }
         if(isComplete) {
             context.getLogger().info("Extracting: " + fileName);
+            context.getLogger().debug("File has " + blockTableEntry.getFileSize() + " bytes");
+            ByteBuffer fileBytes = ByteBuffer.allocate(blockTableEntry.getFileSize());
+            int sectorCount = 0;
             for(FileSectorEntry sector : newSectors) {
-                sector.readSelf();
+                context.getLogger().debug("Reading a sector...");
+                sector.readRawData(sectorCount);
+                sector.addBytes(fileBytes);
+                sectorCount++;
             }
+            try {
+                context.getFileWriter().write(fileBytes.array(), target);
+            } catch (IOException ex) {
+                context.getErrorHandler().handleCriticalError(ex.getMessage());
+            }
+            context.getLogger().debug("Wrote to file: " + target.getAbsolutePath());
+
         } else {
-            context.getErrorHandler().handleError("File cannot be extracted yet (not complete)");
+            read(this.reader, key);
+            if(!isComplete) {
+                // For some reason, coulnd't read completely...
+                context.getErrorHandler().handleCriticalError("Could not " +
+                        "complete file data entry for " + fileName);
+            }
+            extract(fileName, target);
         }
     }
     /*

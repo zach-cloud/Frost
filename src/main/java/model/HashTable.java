@@ -1,14 +1,11 @@
 package model;
 
-import encryption.StormCrypt;
-import interfaces.IReadable;
-import reader.BinaryReader;
+import encryption.StormSecurity;
 import settings.MpqContext;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static encryption.StormConstants.BLOCK_TABLE_ENCRYPTION_KEY;
 import static encryption.StormConstants.HASH_TABLE_ENCRYPTION_KEY;
 import static helper.ByteHelper.*;
 
@@ -22,15 +19,15 @@ public class HashTable {
     /**
      * Decrypts provided block table and parses the entries.
      *
-     * @param stormCrypt            Encryption module with little endian order
+     * @param stormSecurity            Encryption module with little endian order
      * @param encryptedHashTable    Encrypted hash table (read from file)
      */
-    public HashTable(StormCrypt stormCrypt, EncryptedHashTable encryptedHashTable, MpqContext context) {
+    public HashTable(StormSecurity stormSecurity, EncryptedHashTable encryptedHashTable, MpqContext context) {
         entries = new ArrayList<>();
         this.context = context;
         byte[] encryptedData = encryptedHashTable.getEncryptedData();
         context.getLogger().debug("Attempting to decrypt hash table... key=" + HASH_TABLE_ENCRYPTION_KEY);
-        byte[] decryptedData = stormCrypt.decryptBytes(encryptedData, HASH_TABLE_ENCRYPTION_KEY);
+        byte[] decryptedData = stormSecurity.decryptBytes(encryptedData, HASH_TABLE_ENCRYPTION_KEY);
         context.getLogger().debug("Decrypted bytes into: " + decryptedData.length);
         if(decryptedData.length % HASH_TABLE_ENTRY_SIZE != 0) {
             context.getErrorHandler().handleCriticalError("Could not convert decrypted bytes " +

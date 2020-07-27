@@ -1,6 +1,6 @@
 package stepDefs;
 
-import compression.DeflationCompressionI;
+import compression.DeflationCompression;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -13,7 +13,7 @@ public class DeflationCompressionStepDefs {
 
     private byte[] input;
     private byte[] results;
-    private DeflationCompressionI compression;
+    private DeflationCompression compression;
 
     @Given("deflation bytes:")
     public void deflation_bytes(String body) {
@@ -22,7 +22,7 @@ public class DeflationCompressionStepDefs {
 
     @When("data is inflated with size {int}")
     public void data_is_inflated_with_size(int desiredSize) {
-        compression = new DeflationCompressionI();
+        compression = new DeflationCompression();
         results = new byte[desiredSize];
         results = compression.undo(input, results);
     }

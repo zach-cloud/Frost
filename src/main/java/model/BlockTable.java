@@ -1,7 +1,7 @@
 package model;
 
 
-import encryption.StormCrypt;
+import encryption.StormSecurity;
 import settings.MpqContext;
 
 import java.util.ArrayList;
@@ -20,15 +20,15 @@ public class BlockTable {
     /**
      * Decrypts provided block table and parses the entries.
      *
-     * @param stormCrypt            Encryption module with little endian order
+     * @param stormSecurity            Encryption module with little endian order
      * @param encryptedBlockTable   Encrypted block table (read from file)
      */
-    public BlockTable(StormCrypt stormCrypt, EncryptedBlockTable encryptedBlockTable, MpqContext context) {
+    public BlockTable(StormSecurity stormSecurity, EncryptedBlockTable encryptedBlockTable, MpqContext context) {
         this.context = context;
         entries = new ArrayList<>();
         byte[] encryptedData = encryptedBlockTable.getEncryptedData();
         context.getLogger().debug("Attempting to decrypt block table... key=" + BLOCK_TABLE_ENCRYPTION_KEY);
-        byte[] decryptedData = stormCrypt.decryptBytes(encryptedData, BLOCK_TABLE_ENCRYPTION_KEY);
+        byte[] decryptedData = stormSecurity.decryptBytes(encryptedData, BLOCK_TABLE_ENCRYPTION_KEY);
         context.getLogger().debug("Decrypted bytes into: " + decryptedData.length);
         if(decryptedData.length % BLOCK_TABLE_ENTRY_SIZE != 0) {
             context.getErrorHandler().handleCriticalError("Could not convert decrypted bytes " +

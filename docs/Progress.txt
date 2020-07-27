@@ -1,0 +1,2 @@
+I am working on decryption and extracting (listfile) from the test map.
+I just need to fix decryption on bytes to not fail.

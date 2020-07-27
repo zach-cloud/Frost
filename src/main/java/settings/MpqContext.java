@@ -1,15 +1,19 @@
 package settings;
 
+import io.FileWriter;
+
 public class MpqContext {
 
     private MpqLogger logger;
     private MpqSettings settings;
     private MpqErrorHandler errorHandler;
+    private FileWriter fileWriter;
 
     public MpqContext(MpqLogger logger, MpqSettings settings) {
         this.logger = logger;
         this.settings = settings;
         this.errorHandler = new MpqErrorHandler(settings, logger);
+        this.fileWriter = new FileWriter();
     }
 
     public MpqContext() {
@@ -38,5 +42,13 @@ public class MpqContext {
 
     public void setErrorHandler(MpqErrorHandler errorHandler) {
         this.errorHandler = errorHandler;
+    }
+
+    public FileWriter getFileWriter() {
+        return fileWriter;
+    }
+
+    public void setFileWriter(FileWriter fileWriter) {
+        this.fileWriter = fileWriter;
     }
 }

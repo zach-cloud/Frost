@@ -1,19 +1,20 @@
 package model;
 
 import encryption.StormConstants;
-import encryption.StormCrypt;
+import encryption.StormSecurity;
 import helper.StormUtility;
 import interfaces.IReadable;
 import reader.BinaryReader;
 import settings.MpqContext;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MpqObject implements IReadable {
 
     private StormUtility stormUtility;
-    private StormCrypt stormCrypt;
+    private StormSecurity stormSecurity;
 
     // Critical MPQ parts
     private ArchiveHeader archiveHeader;
@@ -48,8 +49,8 @@ public class MpqObject implements IReadable {
     @Override
     public void read(BinaryReader reader) {
         // Initialize helper components
-        this.stormCrypt = new StormCrypt();
-        this.stormUtility = new StormUtility(stormCrypt, context);
+        this.stormSecurity = new StormSecurity();
+        this.stormUtility = new StormUtility(stormSecurity, context);
 
         // Read header - starts at the beginning of MPQ Archive part
         archiveHeader = new ArchiveHeader(context);
@@ -70,13 +71,13 @@ public class MpqObject implements IReadable {
         reader.setPosition(blockTableStart);
         this.encryptedBlockTable = new EncryptedBlockTable(archiveHeader.getBlockTableEntries(), context);
         encryptedBlockTable.read(reader);
-        this.blockTable = new BlockTable(stormCrypt, encryptedBlockTable, context);
+        this.blockTable = new BlockTable(stormSecurity, encryptedBlockTable, context);
 
         // Read the hash table, starting at offset
         reader.setPosition(hashTableStart);
         this.encryptedHashTable = new EncryptedHashTable(archiveHeader.getHashTableEntries(), context);
         encryptedHashTable.read(reader);
-        this.hashTable = new HashTable(stormCrypt, encryptedHashTable, context);
+        this.hashTable = new HashTable(stormSecurity, encryptedHashTable, context);
 
         // For each entry in the hash table/block table, read the associated file data
         //stormUtility.findEntry(hashTable, "war3map.j", StormConstants.ANY_LANGUAGE, StormConstants.ANY_PLATFORM);
@@ -87,10 +88,10 @@ public class MpqObject implements IReadable {
                     hashTableEntry.getFileBlockIndex() != StormConstants.MPQ_HASH_ENTRY_EMPTY) {
                 // Get associated block table entry
                 BlockTableEntry blockTableEntry = blockTable.get(hashTableEntry.getFileBlockIndex());
-                FileDataEntry fileDataEntry = new FileDataEntry(headerStart, stormCrypt, blockTableEntry.getBlockOffset() + headerStart, archiveHeader, blockTableEntry, hashTableEntry, context);
+                FileDataEntry fileDataEntry = new FileDataEntry(headerStart, stormSecurity, blockTableEntry.getBlockOffset() + headerStart, archiveHeader, blockTableEntry, hashTableEntry, context);
                 context.getLogger().debug("Reading block table entry position=" + hashTableEntry.getFileBlockIndex());
                 if(hashTableEntry.getFileBlockIndex() == 18) {
-                    //System.out.println("Going to fail here...");
+                    System.out.println("Going to fail here...");
                 }
                 fileDataEntry.read(reader);
                 fileData.add(fileDataEntry);
@@ -105,15 +106,23 @@ public class MpqObject implements IReadable {
         return entry != null;
     }
 
-    public void extractFile(String fileName) {
+    public void extractFile(String fileName, File target) {
         HashTableEntry entry = stormUtility.findEntry(hashTable, fileName, StormConstants.ANY_LANGUAGE, StormConstants.ANY_PLATFORM);
         if(entry == null) {
             context.getErrorHandler().handleCriticalError("File does not exist: " + fileName);
         }
         for(FileDataEntry fileDataEntry: fileData) {
             if(fileDataEntry.getHashTableEntry() == entry) {
-                fileDataEntry.extract(fileName);
+                fileDataEntry.extract(fileName, target);
             }
         }
+    }
+
+    public void extractFile(String fileName) {
+        extractFile(fileName, new File("out/" + fileName));
+    }
+
+    public int getFileCount() {
+        return blockTable.getEntries().size();
     }
 }

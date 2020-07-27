@@ -1,6 +1,6 @@
 unsigned long dwCryptTable[0x500];
 
-// The stormCrypt and hashing functions use a number table in their procedures. This table must be initialized before the functions are called the first time.
+// The stormSecurity and hashing functions use a number table in their procedures. This table must be initialized before the functions are called the first time.
 void InitializeCryptTable()
 {
     unsigned long seed   = 0x00100001;

@@ -6,7 +6,12 @@ import settings.MpqContext;
 import settings.MpqLogger;
 import settings.MpqSettings;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Represents an MPQ archive that can be read, extracted, and modified.
@@ -32,7 +37,7 @@ public class Mpq {
      * Creates a Mpq with the specified file
      * Default logger/settings
      *
-     * @param origin    MPQ file
+     * @param origin MPQ file
      */
     public Mpq(File origin) {
         this(origin, new MpqLogger(), new MpqSettings());
@@ -42,7 +47,7 @@ public class Mpq {
      * Creates a MPQ with the specified file name.
      * Default logger/settings
      *
-     * @param origin    File name of MPQ file
+     * @param origin File name of MPQ file
      */
     public Mpq(String origin) {
         this(new File(origin));
@@ -52,8 +57,8 @@ public class Mpq {
      * Creates a Mpq with the specified file
      * Default settings
      *
-     * @param origin    MPQ file
-     * @param logger    MPQ Logger
+     * @param origin MPQ file
+     * @param logger MPQ Logger
      */
     public Mpq(File origin, MpqLogger logger) {
         this(origin, logger, new MpqSettings());
@@ -63,8 +68,8 @@ public class Mpq {
      * Creates a MPQ with the specified file name.
      * Default settings
      *
-     * @param origin    File name of MPQ file
-     * @param logger    MPQ Logger
+     * @param origin File name of MPQ file
+     * @param logger MPQ Logger
      */
     public Mpq(String origin, MpqLogger logger) {
         this(new File(origin), logger);
@@ -74,8 +79,8 @@ public class Mpq {
      * Creates a Mpq with the specified file
      * Default logger
      *
-     * @param origin    MPQ file
-     * @param settings  MPQ Settings
+     * @param origin   MPQ file
+     * @param settings MPQ Settings
      */
     public Mpq(File origin, MpqSettings settings) {
         this(origin, new MpqLogger(settings), settings);
@@ -85,8 +90,8 @@ public class Mpq {
      * Creates a MPQ with the specified file name.
      * Default logger
      *
-     * @param origin    File name of MPQ file
-     * @param settings  MPQ Settings
+     * @param origin   File name of MPQ file
+     * @param settings MPQ Settings
      */
     public Mpq(String origin, MpqSettings settings) {
         this(new File(origin), settings);
@@ -95,9 +100,9 @@ public class Mpq {
     /**
      * Creates a Mpq with the specified file
      *
-     * @param origin    MPQ file
-     * @param logger    MPQ Logger
-     * @param settings  MPQ Settings
+     * @param origin   MPQ file
+     * @param logger   MPQ Logger
+     * @param settings MPQ Settings
      */
     public Mpq(File origin, MpqLogger logger, MpqSettings settings) {
         this.origin = origin;
@@ -109,9 +114,9 @@ public class Mpq {
     /**
      * Creates a MPQ with the specified file name.
      *
-     * @param origin    File name of MPQ file
-     * @param logger    MPQ Logger
-     * @param settings  MPQ Settings
+     * @param origin   File name of MPQ file
+     * @param logger   MPQ Logger
+     * @param settings MPQ Settings
      */
     public Mpq(String origin, MpqLogger logger, MpqSettings settings) {
         this(new File(origin), logger, settings);
@@ -122,7 +127,7 @@ public class Mpq {
      * If it does not exist, throws exception.
      */
     private void verifySourceFileExists() {
-        if(!origin.exists()) {
+        if (!origin.exists()) {
             throw new IllegalArgumentException(
                     "File does not exist: " + origin.getAbsolutePath());
         }
@@ -140,8 +145,8 @@ public class Mpq {
     /**
      * Determines if the MPQ archive contains this file.
      *
-     * @param fileName  File name to check
-     * @return          True if exists in archive; false if not.
+     * @param fileName File name to check
+     * @return True if exists in archive; false if not.
      */
     public boolean fileExists(String fileName) {
         return mpqObject.fileExists(fileName);
@@ -150,9 +155,42 @@ public class Mpq {
     /**
      * Extracts the file to the base directory, using the same filename.
      *
-     * @param fileName  File name to extract from archive
+     * @param fileName File name to extract from archive
      */
     public void extractFile(String fileName) {
         mpqObject.extractFile(fileName);
+    }
+
+    /**
+     * Finds all files that exist in the archive.
+     *
+     * @param externalListfilePath  Text file containing external listfile
+     * @return  List of files in archive
+     */
+    public List<String> listFiles(File externalListfilePath) {
+        try {
+            List<String> foundFiles = new ArrayList<>();
+
+            BufferedReader br = new BufferedReader(new FileReader(externalListfilePath));
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (mpqObject.fileExists(line)) {
+                    foundFiles.add(line);
+                }
+            }
+            context.getLogger().debug("Found " + foundFiles.size() + " files!");
+            context.getLogger().debug("Archive contains: " + mpqObject.getFileCount() + " files");
+            context.getLogger().info("Unknown file count: " + (mpqObject.getFileCount() - foundFiles.size()));
+            return foundFiles;
+        } catch (IOException ex) {
+            context.getErrorHandler().handleCriticalError(ex.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    public void extractAll(File externalListfilePath) {
+        for(String fileName : listFiles(externalListfilePath)) {
+            extractFile(fileName);
+        }
     }
 }

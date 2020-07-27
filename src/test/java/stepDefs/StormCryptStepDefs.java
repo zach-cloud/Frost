@@ -1,11 +1,10 @@
 package stepDefs;
 
-import encryption.StormCrypt;
+import encryption.StormSecurity;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.junit.Assert;
-import settings.MpqContext;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -15,7 +14,7 @@ import static utils.ByteUtils.stringToBytes;
 
 public class StormCryptStepDefs {
 
-    private StormCrypt stormCrypt;
+    private StormSecurity stormSecurity;
     private byte[] input;
     private ByteBuffer inputByteBuffer;
     private byte[] result;
@@ -31,16 +30,16 @@ public class StormCryptStepDefs {
 
     @When("bytes are decrypted with key {int}")
     public void bytes_are_decrypted_with_key(int key) {
-        this.stormCrypt = new StormCrypt();
-        result = stormCrypt.decryptBytes(input, key);
-        resultByteBuffer = stormCrypt.decryptBuffer(inputByteBuffer, key);
+        this.stormSecurity = new StormSecurity();
+        result = stormSecurity.decryptBytes(input, key);
+        resultByteBuffer = stormSecurity.decryptBuffer(inputByteBuffer, key);
     }
 
     @When("bytes are encrypted with key {int}")
     public void bytes_are_encrypted_with_key(int key) {
-        this.stormCrypt = new StormCrypt();
-        result = stormCrypt.encryptBytes(input, key);
-        resultByteBuffer = stormCrypt.encryptBuffer(inputByteBuffer, key);
+        this.stormSecurity = new StormSecurity();
+        result = stormSecurity.encryptBytes(input, key);
+        resultByteBuffer = stormSecurity.encryptBuffer(inputByteBuffer, key);
     }
 
     @Then("result bytes should be:")
@@ -59,8 +58,8 @@ public class StormCryptStepDefs {
 
     @When("integer hash is computed with type {int}")
     public void integer_hash_is_computed(int type) {
-        this.stormCrypt = new StormCrypt();
-        intHash = stormCrypt.hashAsInt(toHash, type);
+        this.stormSecurity = new StormSecurity();
+        intHash = stormSecurity.hashAsInt(toHash, type);
     }
 
     @Then("hash should be {int}")

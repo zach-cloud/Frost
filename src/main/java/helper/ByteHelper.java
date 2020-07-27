@@ -81,4 +81,12 @@ public class ByteHelper {
     public static short byteToShort(byte[] src) {
         return byteToShort(src, ByteOrder.LITTLE_ENDIAN);
     }
+
+    public static byte[] trimBytes(byte[] rawData, int offset) {
+        byte[] newBytes = new byte[rawData.length - offset];
+        for(int i = offset; i < rawData.length; i++) {
+            newBytes[i - offset] = rawData[i];
+        }
+        return newBytes;
+    }
 }

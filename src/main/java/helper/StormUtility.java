@@ -1,7 +1,7 @@
 package helper;
 
 import encryption.StormConstants;
-import encryption.StormCrypt;
+import encryption.StormSecurity;
 import model.HashTable;
 import model.HashTableEntry;
 import settings.MpqContext;
@@ -10,11 +10,11 @@ import static encryption.StormConstants.*;
 
 public class StormUtility {
 
-    private StormCrypt stormCrypt;
+    private StormSecurity stormSecurity;
     private MpqContext context;
 
-    public StormUtility(StormCrypt stormCrypt, MpqContext context) {
-        this.stormCrypt = stormCrypt;
+    public StormUtility(StormSecurity stormSecurity, MpqContext context) {
+        this.stormSecurity = stormSecurity;
         this.context = context;
     }
 
@@ -28,32 +28,36 @@ public class StormUtility {
      * @return          Hash table entry, or null if not exists.
      */
     public HashTableEntry findEntry(HashTable hashTable, String fileName, short lang, short platform) {
-        // Find entry in hash table for file
-        long initialEntry = stormCrypt.hashString(fileName, MPQ_HASH_TABLE_OFFSET) & (hashTable.size() -1);
+        try {
+            // Find entry in hash table for file
+            long initialEntry = stormSecurity.hashAsInt(fileName, MPQ_HASH_TABLE_OFFSET) & (hashTable.size() - 1);
 
-        // Is there anything there?
-        HashTableEntry entry = hashTable.get((int)initialEntry);
-        if(entry.getFileBlockIndex() == StormConstants.MPQ_HASH_ENTRY_EMPTY) {
-            return null;
-        }
+            // Is there anything there?
+            HashTableEntry entry = hashTable.get((int) initialEntry);
+            if (entry.getFileBlockIndex() == StormConstants.MPQ_HASH_ENTRY_EMPTY) {
+                return null;
+            }
 
-        // Calculate hashes and find entry
-        int hashA = stormCrypt.hashAsInt(fileName, MPQ_HASH_NAME_A);
-        int hashB = stormCrypt.hashAsInt(fileName, MPQ_HASH_NAME_B);
-        HashTableEntry currentEntry;
-        int currentIndex = (int)initialEntry;
-        while(currentIndex < hashTable.size()) {
-            currentEntry = hashTable.get(currentIndex);
-            if(currentEntry.getFileBlockIndex() != StormConstants.MPQ_HASH_ENTRY_DELETED) {
-                if(currentEntry.getFilePathHashA() == hashA && currentEntry.getFilePathHashB() == hashB) {
-                    if(currentEntry.getPlatform() == platform || platform == ANY_PLATFORM) {
-                        if(currentEntry.getLanguage() == lang || lang == ANY_LANGUAGE) {
-                            return currentEntry;
+            // Calculate hashes and find entry
+            int hashA = stormSecurity.hashAsInt(fileName, MPQ_HASH_NAME_A);
+            int hashB = stormSecurity.hashAsInt(fileName, MPQ_HASH_NAME_B);
+            HashTableEntry currentEntry;
+            int currentIndex = (int) initialEntry;
+            while (currentIndex < hashTable.size()) {
+                currentEntry = hashTable.get(currentIndex);
+                if (currentEntry.getFileBlockIndex() != StormConstants.MPQ_HASH_ENTRY_DELETED) {
+                    if (currentEntry.getFilePathHashA() == hashA && currentEntry.getFilePathHashB() == hashB) {
+                        if (currentEntry.getPlatform() == platform || platform == ANY_PLATFORM) {
+                            if (currentEntry.getLanguage() == lang || lang == ANY_LANGUAGE) {
+                                return currentEntry;
+                            }
                         }
                     }
                 }
+                currentIndex++;
             }
-            currentIndex++;
+        } catch (Exception ex) {
+            context.getLogger().warn("Failed to hash " + fileName + " due to: " + ex.getMessage());
         }
         return null;
     }

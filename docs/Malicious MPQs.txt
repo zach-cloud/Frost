@@ -1,0 +1,2 @@
+The following are some behavior that have been observed of malicious MPQ files:
+- Adding a hash table entry that references a block table entry that does not exist
