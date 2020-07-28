@@ -11,16 +11,14 @@ public class HashTableEntry {
     private int fileBlockIndex;
     private MpqContext context;
 
-    /*
-    00h: int32 FilePathHashA : The hash of the file path, using method A.
-04h: int32 FilePathHashB : The hash of the file path, using method B.
-08h: int16 Language : The language of the file. This is a Windows LANGID data type, and uses the same values. 0 indicates the default language (American English), or that the file is language-neutral.
-0Ah: int8 Platform : The platform the file is used for. 0 indicates the default platform. No other values have been observed.
-0Ch: int32 FileBlockIndex : If the hash table entry is valid, this is the index into the block table of the file. Otherwise, one of the following two values:
-	FFFFFFFFh: Hash table entry is empty, and has always been empty. Terminates searches for a given file.
-	FFFFFFFEh: Hash table entry is empty, but was valid at some point (in other words, the file was deleted). Does not terminate searches for a given file.
-
-     */
+    public HashTableEntry(int filePathHashA, int filePathHashB, short language, short platform, int fileBlockIndex, MpqContext context) {
+        this.filePathHashA = filePathHashA;
+        this.filePathHashB = filePathHashB;
+        this.language = language;
+        this.platform = platform;
+        this.fileBlockIndex = fileBlockIndex;
+        this.context = context;
+    }
 
     public int getFilePathHashA() {
         return filePathHashA;
@@ -42,12 +40,31 @@ public class HashTableEntry {
         return fileBlockIndex;
     }
 
-    public HashTableEntry(int filePathHashA, int filePathHashB, short language, short platform, int fileBlockIndex, MpqContext context) {
+    public void setFilePathHashA(int filePathHashA) {
         this.filePathHashA = filePathHashA;
+    }
+
+    public void setFilePathHashB(int filePathHashB) {
         this.filePathHashB = filePathHashB;
+    }
+
+    public void setLanguage(short language) {
         this.language = language;
+    }
+
+    public void setPlatform(short platform) {
         this.platform = platform;
+    }
+
+    public void setFileBlockIndex(int fileBlockIndex) {
         this.fileBlockIndex = fileBlockIndex;
+    }
+
+    public MpqContext getContext() {
+        return context;
+    }
+
+    public void setContext(MpqContext context) {
         this.context = context;
     }
 }

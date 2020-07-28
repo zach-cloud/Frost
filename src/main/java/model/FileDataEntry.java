@@ -1,12 +1,11 @@
 package model;
 
-import encryption.StormConstants;
-import encryption.StormSecurity;
+import storm.StormConstants;
+import storm.StormSecurity;
 import interfaces.IReadable;
 import reader.BinaryReader;
 import settings.MpqContext;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -25,7 +24,6 @@ public class FileDataEntry implements IReadable {
 
     private boolean isComplete;
 
-    private List<FileSector> sectors;
     private List<FileSectorEntry> newSectors;
 
     private int sectorsInFile;
@@ -47,7 +45,6 @@ public class FileDataEntry implements IReadable {
         this.stormSecurity = stormSecurity;
         this.initialPosition = initialPosition;
         this.archiveOffset = archiveOffset;
-        this.sectors = new ArrayList<>();
         this.newSectors = new ArrayList<>();
         this.header = header;
         this.blockTableEntry = blockTableEntry;
@@ -147,7 +144,7 @@ public class FileDataEntry implements IReadable {
         return hashTableEntry;
     }
 
-    public void extract(String fileName, File target) {
+    public byte[] getFileBytes(String fileName) {
         int key = -1;
         if(blockTableEntry.isEncrypted()) {
             if(fileName.contains("\\")) {
@@ -169,84 +166,111 @@ public class FileDataEntry implements IReadable {
                 sector.addBytes(fileBytes);
                 sectorCount++;
             }
-            try {
-                context.getFileWriter().write(fileBytes.array(), target);
-            } catch (IOException ex) {
-                context.getErrorHandler().handleCriticalError(ex.getMessage());
-            }
-            context.getLogger().debug("Wrote to file: " + target.getAbsolutePath());
-
+            return fileBytes.array();
         } else {
             read(this.reader, key);
             if(!isComplete) {
-                // For some reason, coulnd't read completely...
+                // For some reason, coulnd't read completely... avoid infinite loop.
                 context.getErrorHandler().handleCriticalError("Could not " +
                         "complete file data entry for " + fileName);
             }
-            extract(fileName, target);
+            return getFileBytes(fileName);
         }
     }
-    /*
-    2.6 FILE DATA
-The data for each file is composed of the following structure:
-00h: int32(SectorsInFile + 1) SectorOffsetTable :
 
-Offsets to the start of each sector, relative to the beginning of the file data.
-The last entry contains the file size, making it possible to easily calculate the size
-of any given sector. This table is not present if this information can be calculated (see details below).
-immediately following SectorOffsetTable: SECTOR Sectors(SectorsInFile) :
-Data of each sector in the file, packed end to end (see details below).
+    public static int getSectorSizeBytes() {
+        return SECTOR_SIZE_BYTES;
+    }
 
-Normally, file data is split up into sectors, for simple streaming. All sectors,
-save for the last, will contain as many bytes of file data as specified in the
-archive header's SectorSizeShift; the last sector may contain less than this,
-depending on the size of the entire file's data. If the file is compressed or
-imploded, the sector will be smaller or the same size as the file data it contains.
-Individual sectors in a compressed or imploded file may be stored uncompressed;
-this occurs if and only if the file data the sector contains could not be compressed
-by the algorithm(s) used (if the compressed sector size was greater than or equal
-to the size of the file data), and is indicated by the sector's size in SectorOffsetTable
-being equal to the size of the file data in the sector (which may be calculated from the FileSize).
+    public static void setSectorSizeBytes(int sectorSizeBytes) {
+        SECTOR_SIZE_BYTES = sectorSizeBytes;
+    }
 
-The format of each sector depends on the kind of sector it is. Uncompressed sectors are simply the
-the raw file data contained in the sector. Imploded sectors are the raw compressed data
-following compression with the implode algorithm (these sectors can only be in imploded files).
-Compressed sectors (only found in compressed - not imploded - files) are compressed with one or
-more compression algorithms, and have the following structure:
-00h: byte CompressionMask : Mask of the compression types applied to this sector. If multiple
-compression types are used, they are applied in the order listed below, and decompression is
-performed in the opposite order. This byte counts towards the total sector size, meaning that
-the sector will be stored uncompressed if the data cannot be compressed by at least two bytes;
-as well, this byte is encrypted with the sector data, if applicable. The following compression
-types are defined (for implementations of these algorithms, see StormLib):
-	40h: IMA ADPCM mono
-	80h: IMA ADPCM stereo
-	01h: Huffman encoded
-	02h: Deflated (see ZLib)
-	08h: Imploded (see PKWare Data IGenericCompression Library)
-	10h: BZip2 compressed (see BZip2)
-01h: byte(SectorSize - 1) SectorData : The compressed data for the sector.
+    public int getInitialPosition() {
+        return initialPosition;
+    }
 
-If the file is stored as a single unit (indicated in the file's Flags),
-there is effectively only a single sector, which contains the entire file data.
+    public void setInitialPosition(int initialPosition) {
+        this.initialPosition = initialPosition;
+    }
 
-If the file is encrypted, each sector (after compression/implosion, if applicable)
-is encrypted with the file's key. The base key for a file is determined by a
-hash of the file name stripped of the directory (i.e. the key for a file named
-"directory\file" would be computed as the hash of "file"). If this key is adjusted,
-as indicated in the file's Flags, the final key is calculated as
-((base key + BlockOffset - ArchiveOffset) XOR FileSize)
-(StormLib incorrectly uses an AND in place of the XOR). Each sector is encrypted using the key +
- the 0-based index of the sector in the file. The SectorOffsetTable, if present, is encrypted using the key - 1.
+    public int getArchiveOffset() {
+        return archiveOffset;
+    }
 
-The SectorOffsetTable is omitted when the sizes and offsets of all sectors in the file are calculatable
-from the FileSize. This can happen in several circumstances. If the file is not compressed/imploded
-, then the size and offset of all sectors is known, based on the archive's SectorSizeShift.
-If the file is stored as a single unit compressed/imploded, then the SectorOffsetTable is
-omitted, as the single file "sector" corresponds to BlockSize and FileSize, as mentioned
-previously. However, the SectorOffsetTable will be present if the file is compressed/imploded
-and the file is not stored as a single unit, even if there is only a single sector in the file
- (the size of the file is less than or equal to the archive's sector size).
+    public void setArchiveOffset(int archiveOffset) {
+        this.archiveOffset = archiveOffset;
+    }
 
-     */
+    public ArchiveHeader getHeader() {
+        return header;
+    }
+
+    public void setHeader(ArchiveHeader header) {
+        this.header = header;
+    }
+
+    public void setBlockTableEntry(BlockTableEntry blockTableEntry) {
+        this.blockTableEntry = blockTableEntry;
+    }
+
+    public void setHashTableEntry(HashTableEntry hashTableEntry) {
+        this.hashTableEntry = hashTableEntry;
+    }
+
+    public StormSecurity getStormSecurity() {
+        return stormSecurity;
+    }
+
+    public void setStormSecurity(StormSecurity stormSecurity) {
+        this.stormSecurity = stormSecurity;
+    }
+
+    public boolean isComplete() {
+        return isComplete;
+    }
+
+    public void setComplete(boolean complete) {
+        isComplete = complete;
+    }
+
+    public List<FileSectorEntry> getNewSectors() {
+        return newSectors;
+    }
+
+    public void setNewSectors(List<FileSectorEntry> newSectors) {
+        this.newSectors = newSectors;
+    }
+
+    public int getSectorsInFile() {
+        return sectorsInFile;
+    }
+
+    public void setSectorsInFile(int sectorsInFile) {
+        this.sectorsInFile = sectorsInFile;
+    }
+
+    public int[] getSectorOffsetTable() {
+        return sectorOffsetTable;
+    }
+
+    public void setSectorOffsetTable(int[] sectorOffsetTable) {
+        this.sectorOffsetTable = sectorOffsetTable;
+    }
+
+    public MpqContext getContext() {
+        return context;
+    }
+
+    public void setContext(MpqContext context) {
+        this.context = context;
+    }
+
+    public BinaryReader getReader() {
+        return reader;
+    }
+
+    public void setReader(BinaryReader reader) {
+        this.reader = reader;
+    }
 }

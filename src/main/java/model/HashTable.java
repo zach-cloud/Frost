@@ -1,12 +1,12 @@
 package model;
 
-import encryption.StormSecurity;
+import storm.StormSecurity;
 import settings.MpqContext;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static encryption.StormConstants.HASH_TABLE_ENCRYPTION_KEY;
+import static storm.StormConstants.HASH_TABLE_ENCRYPTION_KEY;
 import static helper.ByteHelper.*;
 
 public class HashTable {
@@ -61,5 +61,17 @@ public class HashTable {
 
     public HashTableEntry get(int initialEntry) {
         return entries.get(initialEntry);
+    }
+
+    public static int getHashTableEntrySize() {
+        return HASH_TABLE_ENTRY_SIZE;
+    }
+
+    public MpqContext getContext() {
+        return context;
+    }
+
+    public void setContext(MpqContext context) {
+        this.context = context;
     }
 }

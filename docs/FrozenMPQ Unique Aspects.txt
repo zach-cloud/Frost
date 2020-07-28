@@ -1,1 +1,0 @@
-FrozenMPQ will not read the (listfile) in an MPQ archive, even if it exists. It always expects an external listfile.

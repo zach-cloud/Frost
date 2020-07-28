@@ -1,2 +1,5 @@
-I am working on decryption and extracting (listfile) from the test map.
-I just need to fix decryption on bytes to not fail.
+Next steps:
+- Lots of unit testing for current features
+- Add Save functionality
+- Add Import functionality
+- Program the rest of the compressions

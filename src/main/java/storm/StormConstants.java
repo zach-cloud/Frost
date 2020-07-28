@@ -1,4 +1,4 @@
-package encryption;
+package storm;
 
 public interface StormConstants {
 

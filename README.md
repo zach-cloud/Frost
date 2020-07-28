@@ -19,7 +19,7 @@ FrozenMPQ2 is a multi-platform MPQ editing library written in pure Java. The MPQ
 
 2: Create an MPQ object from a file or String path:
 ```$xslt
-Mpq mpq = new Mpq(inFile);
+IMpq mpq = new Mpq(inFile);
 ```
 
 3: Use the operations on the MPQ, for example:
@@ -30,6 +30,14 @@ Mpq mpq = new Mpq(inFile);
             System.out.println("File does not exist.");
         }
 ```
+
+The internal details of the MPQ are deliberately exposed through public getters and setters. The intention of this is to allow developers who are familiar with the MPQ format to be able to directly examine and modify the data as they want, in order to support advanced use cases.
+
+If you do not want to worry about the internal details, simply use the interface (IMpq) which does not have these details. Using the IMpq interface will prevent you from shooting yourself in the foot.
+
+# Operations provided
+
+TODO.
 
 # Command line interface
 

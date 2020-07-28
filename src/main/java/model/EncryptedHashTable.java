@@ -40,4 +40,28 @@ public class EncryptedHashTable implements IReadable {
     public byte[] getEncryptedData() {
         return encryptedData;
     }
+
+    public static int getBytesPerBlockTableEntry() {
+        return BYTES_PER_BLOCK_TABLE_ENTRY;
+    }
+
+    public void setEncryptedData(byte[] encryptedData) {
+        this.encryptedData = encryptedData;
+    }
+
+    public int getEntryCount() {
+        return entryCount;
+    }
+
+    public void setEntryCount(int entryCount) {
+        this.entryCount = entryCount;
+    }
+
+    public MpqContext getContext() {
+        return context;
+    }
+
+    public void setContext(MpqContext context) {
+        this.context = context;
+    }
 }

@@ -1,13 +1,13 @@
 package model;
 
 
-import encryption.StormSecurity;
+import storm.StormSecurity;
 import settings.MpqContext;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static encryption.StormConstants.BLOCK_TABLE_ENCRYPTION_KEY;
+import static storm.StormConstants.BLOCK_TABLE_ENCRYPTION_KEY;
 import static helper.ByteHelper.*;
 
 public class BlockTable {
@@ -56,5 +56,17 @@ public class BlockTable {
 
     public void setEntries(List<BlockTableEntry> entries) {
         this.entries = entries;
+    }
+
+    public static int getBlockTableEntrySize() {
+        return BLOCK_TABLE_ENTRY_SIZE;
+    }
+
+    public MpqContext getContext() {
+        return context;
+    }
+
+    public void setContext(MpqContext context) {
+        this.context = context;
     }
 }

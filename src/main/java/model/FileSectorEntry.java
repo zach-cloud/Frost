@@ -1,7 +1,7 @@
 package model;
 
 import compression.CompressionHandler;
-import encryption.StormSecurity;
+import storm.StormSecurity;
 import helper.ByteHelper;
 import reader.BinaryReader;
 import settings.MpqContext;
@@ -20,7 +20,7 @@ public class FileSectorEntry {
     private boolean compressed; // True if compressed, false if not.
     private boolean encrypted; // True if encrypted, false if not
     private byte[] rawData; // Stores raw bytes of sector, can be compressed
-    private byte[] fileData; // Stores decompressed/decrypted data
+    private byte[] fileData; // Stores decompressed/decrypted data. Essentially a cache for multiple extractions.
 
     private BinaryReader reader;
     private CompressionHandler compressionHandler;
@@ -74,7 +74,7 @@ public class FileSectorEntry {
             reader.setPosition(start+offset);
             rawData = reader.readBytes((end+offset) - (start+offset));
             if(encrypted) {
-                // TODO: Fixme
+                context.getLogger().debug("Decrypting file data with key=" + key+sectorCount);
                 rawData = stormSecurity.decryptBytes(rawData, key + sectorCount);
             }
             if(rawData.length != compressedSize) {
@@ -96,11 +96,6 @@ public class FileSectorEntry {
         if(isProcessed) {
             fileBytes.put(fileData);
         } else {
-            if(encrypted) {
-                context.getErrorHandler()
-                        .handleCriticalError("Not yet implemented (decrypt)");
-                // TODO: Write decryption code
-            }
             if(compressed) {
                 byte compressionFlag = rawData[0];
                 fileData = ByteHelper.trimBytes(rawData, 1);
@@ -109,5 +104,133 @@ public class FileSectorEntry {
             fileBytes.put(fileData);
             isProcessed = true;
         }
+    }
+
+    public int getStart() {
+        return start;
+    }
+
+    public void setStart(int start) {
+        this.start = start;
+    }
+
+    public int getEnd() {
+        return end;
+    }
+
+    public void setEnd(int end) {
+        this.end = end;
+    }
+
+    public int getOffset() {
+        return offset;
+    }
+
+    public void setOffset(int offset) {
+        this.offset = offset;
+    }
+
+    public int getCompressedSize() {
+        return compressedSize;
+    }
+
+    public void setCompressedSize(int compressedSize) {
+        this.compressedSize = compressedSize;
+    }
+
+    public int getRealSize() {
+        return realSize;
+    }
+
+    public void setRealSize(int realSize) {
+        this.realSize = realSize;
+    }
+
+    public int getKey() {
+        return key;
+    }
+
+    public void setKey(int key) {
+        this.key = key;
+    }
+
+    public boolean isCompressed() {
+        return compressed;
+    }
+
+    public void setCompressed(boolean compressed) {
+        this.compressed = compressed;
+    }
+
+    public boolean isEncrypted() {
+        return encrypted;
+    }
+
+    public void setEncrypted(boolean encrypted) {
+        this.encrypted = encrypted;
+    }
+
+    public byte[] getRawData() {
+        return rawData;
+    }
+
+    public void setRawData(byte[] rawData) {
+        this.rawData = rawData;
+    }
+
+    public byte[] getFileData() {
+        return fileData;
+    }
+
+    public void setFileData(byte[] fileData) {
+        this.fileData = fileData;
+    }
+
+    public BinaryReader getReader() {
+        return reader;
+    }
+
+    public void setReader(BinaryReader reader) {
+        this.reader = reader;
+    }
+
+    public CompressionHandler getCompressionHandler() {
+        return compressionHandler;
+    }
+
+    public void setCompressionHandler(CompressionHandler compressionHandler) {
+        this.compressionHandler = compressionHandler;
+    }
+
+    public boolean isRead() {
+        return isRead;
+    }
+
+    public void setRead(boolean read) {
+        isRead = read;
+    }
+
+    public boolean isProcessed() {
+        return isProcessed;
+    }
+
+    public void setProcessed(boolean processed) {
+        isProcessed = processed;
+    }
+
+    public MpqContext getContext() {
+        return context;
+    }
+
+    public void setContext(MpqContext context) {
+        this.context = context;
+    }
+
+    public StormSecurity getStormSecurity() {
+        return stormSecurity;
+    }
+
+    public void setStormSecurity(StormSecurity stormSecurity) {
+        this.stormSecurity = stormSecurity;
     }
 }

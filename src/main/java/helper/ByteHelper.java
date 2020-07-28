@@ -89,4 +89,16 @@ public class ByteHelper {
         }
         return newBytes;
     }
+
+    public static byte[] combineBytes(byte[] intArrayToBytes, byte[] endBuffer) {
+        int totalLength = intArrayToBytes.length + endBuffer.length;
+        byte[] newBytes = new byte[totalLength];
+        for(int i = 0; i < intArrayToBytes.length; i++) {
+            newBytes[i] = intArrayToBytes[i];
+        }
+        for(int i = 0; i < endBuffer.length; i++) {
+            newBytes[i + intArrayToBytes.length] = endBuffer[i];
+        }
+        return newBytes;
+    }
 }

@@ -1,12 +1,10 @@
-package helper;
+package storm;
 
-import encryption.StormConstants;
-import encryption.StormSecurity;
 import model.HashTable;
 import model.HashTableEntry;
 import settings.MpqContext;
 
-import static encryption.StormConstants.*;
+import static storm.StormConstants.*;
 
 public class StormUtility {
 

@@ -59,4 +59,9 @@ public class CompressionHandler {
 
         return data;
     }
+
+    public byte[] compress(byte[] data, int compressionFlag) {
+        context.getErrorHandler().handleCriticalError("Not implemented (compress)");
+        return null;
+    }
 }

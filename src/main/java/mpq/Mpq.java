@@ -1,5 +1,6 @@
 package mpq;
 
+import interfaces.IMpq;
 import model.MpqObject;
 import reader.BinaryReader;
 import settings.MpqContext;
@@ -10,13 +11,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * Represents an MPQ archive that can be read, extracted, and modified.
  */
-public class Mpq {
+public class Mpq implements IMpq {
 
     /**
      * File that is an MPQ archive.
@@ -98,6 +99,19 @@ public class Mpq {
     }
 
     /**
+     * Creates a MPQ with the specified file and context.
+     *
+     * @param origin    Origin file
+     * @param context   MPQ context
+     */
+    public Mpq(File origin, MpqContext context) {
+        this.origin = origin;
+        this.context = context;
+        verifySourceFileExists();
+        readFile();
+    }
+
+    /**
      * Creates a Mpq with the specified file
      *
      * @param origin   MPQ file
@@ -105,10 +119,7 @@ public class Mpq {
      * @param settings MPQ Settings
      */
     public Mpq(File origin, MpqLogger logger, MpqSettings settings) {
-        this.origin = origin;
-        this.context = new MpqContext(logger, settings);
-        verifySourceFileExists();
-        readFile();
+        this(origin, new MpqContext(logger, settings));
     }
 
     /**
@@ -148,6 +159,7 @@ public class Mpq {
      * @param fileName File name to check
      * @return True if exists in archive; false if not.
      */
+    @Override
     public boolean fileExists(String fileName) {
         return mpqObject.fileExists(fileName);
     }
@@ -157,40 +169,121 @@ public class Mpq {
      *
      * @param fileName File name to extract from archive
      */
+    @Override
     public void extractFile(String fileName) {
         mpqObject.extractFile(fileName);
     }
 
     /**
-     * Finds all files that exist in the archive.
+     * Adds files from the external listfile (disk) into the internal listfile
      *
      * @param externalListfilePath  Text file containing external listfile
-     * @return  List of files in archive
      */
-    public List<String> listFiles(File externalListfilePath) {
+    @Override
+    public void addExternalListfile(File externalListfilePath) {
+        if(mpqObject.getUnknownFileCount() == 0) {
+            context.getLogger().info("Skipping external listfile since we know all files.");
+        }
         try {
-            List<String> foundFiles = new ArrayList<>();
-
             BufferedReader br = new BufferedReader(new FileReader(externalListfilePath));
             String line;
             while ((line = br.readLine()) != null) {
-                if (mpqObject.fileExists(line)) {
-                    foundFiles.add(line);
-                }
+                // Only adds if it actually exists
+                mpqObject.addFileName(line);
             }
-            context.getLogger().debug("Found " + foundFiles.size() + " files!");
+            context.getLogger().debug("Found " + mpqObject.getKnownFileCount() + " files!");
             context.getLogger().debug("Archive contains: " + mpqObject.getFileCount() + " files");
-            context.getLogger().info("Unknown file count: " + (mpqObject.getFileCount() - foundFiles.size()));
-            return foundFiles;
+            context.getLogger().info("Unknown file count: " + mpqObject.getUnknownFileCount());
         } catch (IOException ex) {
             context.getErrorHandler().handleCriticalError(ex.getMessage());
-            return new ArrayList<>();
         }
     }
 
-    public void extractAll(File externalListfilePath) {
-        for(String fileName : listFiles(externalListfilePath)) {
-            extractFile(fileName);
-        }
+    /**
+     * Retrieves a Set of the file names in the archive.
+     * This set cannot be modified.
+     *
+     * If you really want to modify it, you should retrieve the MpqObject
+     * and then get the file names from that. Do this at your own risk.
+     *
+     * @return  Unmodifiable set of file names
+     */
+    @Override
+    public Set<String> getFileNames() {
+        return Collections.unmodifiableSet(mpqObject.getFileNames());
+    }
+    /**
+     * Extracts all files that we know the name of
+     */
+    @Override
+    public void extractAllKnown() {
+        mpqObject.extractAllKnown();
+    }
+
+    /**
+     * Extracts all files that we know the name of, and includes
+     * an external listfile.
+     *
+     * @param externalListfilePath  Path to external listfile.
+     */
+    @Override
+    public void extractAllKnown(File externalListfilePath) {
+        addExternalListfile(externalListfilePath);
+        extractAllKnown();
+    }
+
+    /**
+     * Returns theoretical number of files in the archive.
+     * This is not necessarily the amount of files that can be known
+     * or extracted, simply the number of block table entries.
+     *
+     * @return  Total file count (theoretical)
+     */
+    @Override
+    public int getFileCount() {
+        return mpqObject.getFileCount();
+    }
+
+    /**
+     * Returns the number of files that we know the name of.
+     *
+     * @return  Number of known files.
+     */
+    @Override
+    public int getKnownFileCount() {
+        return mpqObject.getKnownFileCount();
+    }
+
+    /**
+     * Returns the amount of files that we don't know the name of.
+     *
+     * @return  Number of unknown files
+     */
+    public int getUnknownFileCount() {
+        return mpqObject.getUnknownFileCount();
+    }
+
+    public File getOrigin() {
+        return origin;
+    }
+
+    public void setOrigin(File origin) {
+        this.origin = origin;
+    }
+
+    public MpqObject getMpqObject() {
+        return mpqObject;
+    }
+
+    public void setMpqObject(MpqObject mpqObject) {
+        this.mpqObject = mpqObject;
+    }
+
+    public MpqContext getContext() {
+        return context;
+    }
+
+    public void setContext(MpqContext context) {
+        this.context = context;
     }
 }
