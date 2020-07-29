@@ -22,7 +22,6 @@ public class BinaryReader {
     private ByteBuffer stream;
     private List<Integer> undoStack;
     private int lastReadBytes = 0;
-    private MpqContext context;
 
     /**
      * Makes a new binary reader with file contents
@@ -30,30 +29,41 @@ public class BinaryReader {
      * @param origin    File to set for reader
      * @param byteOrder Byte order (little/big endian)
      */
-    public BinaryReader(File origin, ByteOrder byteOrder, MpqContext context) {
+    public BinaryReader(File origin, ByteOrder byteOrder) {
         try {
             byte[] fileData = IOUtils.toByteArray(new FileInputStream(origin));
-            stream = ByteBuffer.allocate(fileData.length);
-            stream.put(fileData);
-            stream.order(byteOrder);
-            // Ignore this warning. It's not redundant. Code in JAR form fails without cast!!
-            ((Buffer)stream).flip();
-            this.undoStack = new LinkedList<>();
-            this.byteOrder = byteOrder;
-            this.context = context;
+            initialize(fileData, byteOrder);
         } catch (IOException ex) {
-            context.getErrorHandler().handleCriticalError("Cannot read file: " + origin.getAbsolutePath());
+            throw new RuntimeException("Cannot read file: " + origin.getAbsolutePath());
         }
+    }
+
+    public BinaryReader(byte[] source, ByteOrder byteOrder) {
+        initialize(source, byteOrder);
+    }
+
+    private void initialize(byte[] source, ByteOrder byteOrder) {
+        stream = ByteBuffer.allocate(source.length);
+        stream.put(source);
+        stream.order(byteOrder);
+        // Ignore this warning. It's not redundant. Code in JAR form fails without cast!!
+        ((Buffer) stream).flip();
+        this.undoStack = new LinkedList<>();
+        this.byteOrder = byteOrder;
+    }
+
+    public BinaryReader(byte[] source) {
+        initialize(source, ByteOrder.LITTLE_ENDIAN);
     }
 
     /**
      * Makes a new binary reader with file contents
      * Assumes little endian
      *
-     * @param origin    File to set for reader
+     * @param origin File to set for reader
      */
-    public BinaryReader(File origin, MpqContext context) {
-        this(origin, ByteOrder.LITTLE_ENDIAN, context);
+    public BinaryReader(File origin) {
+        this(origin, ByteOrder.LITTLE_ENDIAN);
     }
 
     public void goTo(String flag) throws IOException {
@@ -61,21 +71,21 @@ public class BinaryReader {
         byte currentByte = 0;
         byte currentLetterByte = 0;
         int currentLetter = 0;
-        while(currentLetter != size) {
+        while (currentLetter != size) {
             currentByte = readByte();
-            currentLetterByte = (byte)flag.charAt(currentLetter);
-            if(currentByte == currentLetterByte) {
+            currentLetterByte = (byte) flag.charAt(currentLetter);
+            if (currentByte == currentLetterByte) {
                 currentLetter++;
             } else {
-                if(currentLetter > 0) {
-                    for(int i = 0; i < currentLetter; i++) {
+                if (currentLetter > 0) {
+                    for (int i = 0; i < currentLetter; i++) {
                         undo();
                     }
                 }
                 currentLetter = 0;
             }
         }
-        for(int i = 0; i < currentLetter; i++) {
+        for (int i = 0; i < currentLetter; i++) {
             undo();
         }
     }
@@ -88,10 +98,10 @@ public class BinaryReader {
      * Undoes the last operation (shifts position back)
      */
     public void undo() {
-        if(undoStack.size() == 0) {
-            context.getErrorHandler().handleError("Attempted to undo a non-existent operation");
+        if (undoStack.size() == 0) {
+            throw new RuntimeException("Attempted to undo a non-existent operation");
         }
-        int adjustment = undoStack.remove(undoStack.size()-1);
+        int adjustment = undoStack.remove(undoStack.size() - 1);
         stream.position(stream.position() - adjustment);
     }
 
@@ -100,9 +110,9 @@ public class BinaryReader {
      * Resets byte count of last operation
      */
     private void adjustStack() {
-        if(lastReadBytes != 0) {
+        if (lastReadBytes != 0) {
             undoStack.add(lastReadBytes);
-            if(undoStack.size() > 100) {
+            if (undoStack.size() > 100) {
                 undoStack.remove(0);
             }
         }
@@ -111,7 +121,7 @@ public class BinaryReader {
 
     private byte[] readBytesInternal(int count) throws IOException {
         byte[] collected = new byte[count];
-        for(int i = 0 ; i < count; i++) {
+        for (int i = 0; i < count; i++) {
             collected[i] = readByteInternal();
         }
         return collected;
@@ -125,8 +135,8 @@ public class BinaryReader {
     /**
      * Reads a number of characters as a String
      *
-     * @param length    Character count to read
-     * @return          String data
+     * @param length Character count to read
+     * @return String data
      */
     public String readString(int length) throws IOException {
         //System.out.println("Reading string (" + length + ")");
@@ -138,7 +148,7 @@ public class BinaryReader {
     /**
      * Reads a String until it finds a null terminator.
      *
-     * @return          String data
+     * @return String data
      */
     public String readString() throws IOException {
         //System.out.println("Reading string (until 0x00)");
@@ -147,12 +157,12 @@ public class BinaryReader {
         byte current = 0;
         do {
             current = readByteInternal();
-            if(current != 0x00) {
+            if (current != 0x00) {
                 bytes.add(current);
             }
-        } while(current != 0x00);
+        } while (current != 0x00);
         byte[] bytesArray = new byte[bytes.size()];
-        for(int i = 0; i < bytes.size(); i++) {
+        for (int i = 0; i < bytes.size(); i++) {
             bytesArray[i] = bytes.get(i);
         }
         return new String(bytesArray);
@@ -162,7 +172,7 @@ public class BinaryReader {
      * Reads a single byte.
      * For internal use, increments the read bytes count
      *
-     * @return          1 byte
+     * @return 1 byte
      */
     private byte readByteInternal() throws IOException {
         lastReadBytes++;
@@ -174,7 +184,7 @@ public class BinaryReader {
     /**
      * Reads a single byte.
      *
-     * @return          1 byte
+     * @return 1 byte
      */
     public byte readByte() throws IOException {
         //System.out.println("Reading byte (1)");
@@ -186,9 +196,9 @@ public class BinaryReader {
      * Reads a 8 byte Unsigned Int.
      * Little endian.
      *
-     * @return          Uin64
+     * @return Uin64
      */
-    public long readLong()  throws IOException {
+    public long readLong() throws IOException {
         //System.out.println("Reading long (8)");
         adjustStack();
         byte[] collected = readBytesInternal(8);
@@ -199,9 +209,9 @@ public class BinaryReader {
      * Reads a 2 byte Unsigned Int.
      * Little endian.
      *
-     * @return          Uint16
+     * @return Uint16
      */
-    public int readShort()  throws IOException {
+    public int readShort() throws IOException {
         //System.out.println("Reading short (2)");
         adjustStack();
         byte[] collected = readBytesInternal(2);
@@ -212,7 +222,7 @@ public class BinaryReader {
      * Reads a 4 byte Unsigned Int.
      * Little endian.
      *
-     * @return          Uint with byte size X
+     * @return Uint with byte size X
      */
     public int readInt() throws IOException {
         //System.out.println("Reading int (4)");
@@ -225,13 +235,13 @@ public class BinaryReader {
      * Reads a 4-byte Real.
      * Little endian.
      *
-     * @return          Real value
+     * @return Real value
      */
     public double readReal() throws IOException {
         //System.out.println("Reading real (4)");
         adjustStack();
         byte[] collected = new byte[4];
-        for(int i = 0 ; i < 4; i++) {
+        for (int i = 0; i < 4; i++) {
             collected[i] = readByteInternal();
         }
         return ByteBuffer.wrap(collected).order(byteOrder).getFloat();

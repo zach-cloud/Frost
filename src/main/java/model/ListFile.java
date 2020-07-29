@@ -51,6 +51,7 @@ public class ListFile {
                     + ex.getMessage());
         }
         add("(listfile)");
+        add("(attributes)");
     }
 
     public void add(String entry) {

@@ -18,7 +18,7 @@ public interface IGenericCompression {
      *              Depending on what compression type this is,
      *              the array may need to be instantiated to the
      *              size of the uncompressed data!
-     * @return      Unompressed data
+     * @return      Uncompressed data
      */
     byte[] undo(byte[] src, byte[] dest);
 

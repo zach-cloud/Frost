@@ -20,6 +20,8 @@ public class ArchiveHeader implements IReadable {
     private long extendedBlockTableOffset; //int64
     private int hashTableOffsetHigh; //int16
     private int blockTableOffsetHigh; //int16
+    // Calculated
+    private int sectorSize; // How many bytes per sector
 
     private MpqContext context;
 
@@ -51,6 +53,9 @@ public class ArchiveHeader implements IReadable {
                 hashTableOffsetHigh = reader.readShort();
                 blockTableOffsetHigh = reader.readShort();
             }
+
+            sectorSize = 512 * (int)(Math.pow(2, sectorSizeShift));
+            context.getLogger().debug("Sector size: " + sectorSize);
         } catch (Exception ex) {
             ex.printStackTrace();
             context.getErrorHandler().handleCriticalError("Failed reading: " + ex.getMessage());
@@ -160,5 +165,21 @@ public class ArchiveHeader implements IReadable {
 
     public void setOffsetStart(int offsetStart) {
         this.offsetStart = offsetStart;
+    }
+
+    public int getSectorSize() {
+        return sectorSize;
+    }
+
+    public void setSectorSize(int sectorSize) {
+        this.sectorSize = sectorSize;
+    }
+
+    public MpqContext getContext() {
+        return context;
+    }
+
+    public void setContext(MpqContext context) {
+        this.context = context;
     }
 }

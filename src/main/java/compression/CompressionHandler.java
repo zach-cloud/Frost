@@ -49,6 +49,7 @@ public class CompressionHandler {
                     handleCriticalError("Not yet written (Huffman)");
         }
         if(stereoCompressed) {
+            // TODO: Add me.
             context.getErrorHandler().
                     handleCriticalError("Not yet written (Stereo)");
         }

@@ -13,8 +13,6 @@ import java.util.List;
 
 public class FileDataEntry implements IReadable {
 
-    private static int SECTOR_SIZE_BYTES = 4096;
-
     private int initialPosition;
     private int archiveOffset;
     private ArchiveHeader header;
@@ -50,8 +48,8 @@ public class FileDataEntry implements IReadable {
         this.blockTableEntry = blockTableEntry;
         this.hashTableEntry = hashTableEntry;
         this.context = context;
-        sectorsInFile = blockTableEntry.getFileSize() / SECTOR_SIZE_BYTES;
-        if (blockTableEntry.getFileSize() % SECTOR_SIZE_BYTES != 0) {
+        sectorsInFile = blockTableEntry.getFileSize() / header.getSectorSize();
+        if (blockTableEntry.getFileSize() % header.getSectorSize() != 0) {
             // One sector holds remainder
             sectorsInFile++;
         }
@@ -118,8 +116,8 @@ public class FileDataEntry implements IReadable {
             // and total them up, then do fileSize - readBytes
             int realSectorSize = 0; // TODO
             if(i != sectorsInFile - 1) {
-                realSectorSize = SECTOR_SIZE_BYTES;
-                totalReadBytes += SECTOR_SIZE_BYTES;
+                realSectorSize = header.getSectorSize();
+                totalReadBytes += header.getSectorSize();
             } else {
                 // The file size minus the read bytes provides us
                 // the actual file size of the final sector
@@ -148,12 +146,14 @@ public class FileDataEntry implements IReadable {
         int key = -1;
         if(blockTableEntry.isEncrypted()) {
             if(fileName.contains("\\")) {
-                fileName = fileName.substring(fileName.indexOf("\\"));
+                fileName = fileName.substring(1+fileName.lastIndexOf("\\"));
             }
             key = stormSecurity.hashAsInt(fileName, StormConstants.MPQ_HASH_FILE_KEY);
+            context.getLogger().debug("Calculated key for fileName=" + fileName + " as " + key);
             if(blockTableEntry.isKeyAdjusted()) {
                 key = (key + blockTableEntry.getBlockOffset()) ^ blockTableEntry.getFileSize();
             }
+            context.getLogger().debug("Adjusted key to: " + key);
         }
         if(isComplete) {
             context.getLogger().info("Extracting: " + fileName);
@@ -176,14 +176,6 @@ public class FileDataEntry implements IReadable {
             }
             return getFileBytes(fileName);
         }
-    }
-
-    public static int getSectorSizeBytes() {
-        return SECTOR_SIZE_BYTES;
-    }
-
-    public static void setSectorSizeBytes(int sectorSizeBytes) {
-        SECTOR_SIZE_BYTES = sectorSizeBytes;
     }
 
     public int getInitialPosition() {

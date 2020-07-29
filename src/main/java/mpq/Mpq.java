@@ -148,7 +148,7 @@ public class Mpq implements IMpq {
      * Reads MPQ file data into an MPQ model object
      */
     private void readFile() {
-        BinaryReader reader = new BinaryReader(origin, context);
+        BinaryReader reader = new BinaryReader(origin);
         this.mpqObject = new MpqObject(context);
         mpqObject.read(reader);
     }
