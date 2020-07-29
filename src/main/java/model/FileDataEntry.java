@@ -57,16 +57,21 @@ public class FileDataEntry implements IReadable {
     }
 
     private void read(BinaryReader reader, int key) {
+        if(blockTableEntry.getFileSize() <= 0) {
+            // A worthless block. Let's skip it.
+            isComplete = false;
+            return;
+        }
         reader.setPosition(initialPosition);
 
         try {
-            if(!blockTableEntry.isSingleUnit() || blockTableEntry.isCompressed() || blockTableEntry.isImploded()) {
-                // For this one, we need to read the sector offset table.
-                context.getLogger().debug("Reading data with offset table");
-                readCompressedFiledata(reader, key);
+           if (!(blockTableEntry.isCompressed() || blockTableEntry.isImploded())) {
+               context.getLogger().debug("Reading data with no offset table");
+               readUncompressedFileData(reader, key);
             } else {
-                context.getLogger().debug("Reading data without offset table");
-                // TODO...
+                // For this one, we need to read the sector offset table.
+                context.getLogger().debug("Reading data with an offset table");
+                readCompressedFiledata(reader, key);
             }
 
         } catch (IOException ex) {
@@ -84,9 +89,46 @@ public class FileDataEntry implements IReadable {
         read(reader, -1);
     }
 
+    private void readUncompressedFileData(BinaryReader reader, int key) throws IOException {
+        if (blockTableEntry.isEncrypted() && key == -1) {
+            this.reader = reader; // Now we need to save the reader.
+            return;
+            // We'll need to do this later...
+            // Should find a cleaner way of doing this.
+        }
+
+        int currentPosition = 0;
+        int remainingSize = blockTableEntry.getFileSize();
+
+        // While unlikely, it's possible that an uncompressed file can be large enough
+        // to be split into multiple sectors.
+        for(int i = 0; i < sectorsInFile - 1; i++) {
+            int start = currentPosition;
+            int end = currentPosition + header.getSectorSize();
+            currentPosition = end;
+            remainingSize -= header.getSectorSize();
+
+            FileSectorEntry entry = new FileSectorEntry(start, end,
+                    archiveOffset + blockTableEntry.getBlockOffset(),
+                    blockTableEntry.getFileSize(), blockTableEntry.getFileSize(),
+                    false, blockTableEntry.isEncrypted(),
+                    key, reader, context, stormSecurity);
+            newSectors.add(entry);
+        }
+        int fileEnd = currentPosition + remainingSize;
+        FileSectorEntry entry = new FileSectorEntry(currentPosition, fileEnd,
+                archiveOffset + blockTableEntry.getBlockOffset(),
+                blockTableEntry.getFileSize(), blockTableEntry.getFileSize(),
+                false, blockTableEntry.isEncrypted(),
+                key, reader, context, stormSecurity);
+        newSectors.add(entry);
+
+        isComplete = true;
+    }
+
     private void readCompressedFiledata(BinaryReader reader, int key) throws IOException {
 
-        if(blockTableEntry.isEncrypted() && key == -1) {
+        if (blockTableEntry.isEncrypted() && key == -1) {
             this.reader = reader; // Now we need to save the reader.
             return;
             // We'll need to do this later...
@@ -96,16 +138,16 @@ public class FileDataEntry implements IReadable {
         int totalReadBytes = 0;
 
         // Build the offset table
-        for(int i = 0; i < sectorsInFile + 1; i++) {
+        for (int i = 0; i < sectorsInFile + 1; i++) {
             sectorOffsetTable[i] = reader.readInt();
         }
 
-        if(blockTableEntry.isEncrypted()) {
+        if (blockTableEntry.isEncrypted()) {
             sectorOffsetTable = stormSecurity.decrypt(sectorOffsetTable, key - 1);
         }
 
         // Use the offset table to compute each sector position and size
-        for(int i = 0; i < sectorsInFile; i++) {
+        for (int i = 0; i < sectorsInFile; i++) {
             int start = sectorOffsetTable[i];
             int end = sectorOffsetTable[i + 1];
 
@@ -115,7 +157,7 @@ public class FileDataEntry implements IReadable {
             // If it is the final sector... we need to accumulate bytes throughout
             // and total them up, then do fileSize - readBytes
             int realSectorSize = 0; // TODO
-            if(i != sectorsInFile - 1) {
+            if (i != sectorsInFile - 1) {
                 realSectorSize = header.getSectorSize();
                 totalReadBytes += header.getSectorSize();
             } else {
@@ -124,9 +166,13 @@ public class FileDataEntry implements IReadable {
                 realSectorSize = blockTableEntry.getFileSize() - totalReadBytes;
             }
 
+            // Even if the compression flag is set to TRUE, we need to check the sizes.
+            // If the compressed size is larger or equal to the uncompressed size,
+            // it will NOT actually compress the data! We can treat it as uncompressed.
+            boolean isActuallyCompressed = compressedSectorSize < realSectorSize;
             FileSectorEntry entry = new FileSectorEntry(start, end,
                     archiveOffset + blockTableEntry.getBlockOffset(),
-                    compressedSectorSize, realSectorSize, true, blockTableEntry.isEncrypted(),
+                    compressedSectorSize, realSectorSize, isActuallyCompressed, blockTableEntry.isEncrypted(),
                     key, reader, context, stormSecurity);
             newSectors.add(entry);
         }
@@ -143,24 +189,28 @@ public class FileDataEntry implements IReadable {
     }
 
     public byte[] getFileBytes(String fileName) {
+        if(blockTableEntry.getFileSize() <= 0) {
+            // Extract the empty file, I guess?
+            return new byte[0];
+        }
         int key = -1;
-        if(blockTableEntry.isEncrypted()) {
-            if(fileName.contains("\\")) {
-                fileName = fileName.substring(1+fileName.lastIndexOf("\\"));
+        if (blockTableEntry.isEncrypted()) {
+            if (fileName.contains("\\")) {
+                fileName = fileName.substring(1 + fileName.lastIndexOf("\\"));
             }
             key = stormSecurity.hashAsInt(fileName, StormConstants.MPQ_HASH_FILE_KEY);
             context.getLogger().debug("Calculated key for fileName=" + fileName + " as " + key);
-            if(blockTableEntry.isKeyAdjusted()) {
+            if (blockTableEntry.isKeyAdjusted()) {
                 key = (key + blockTableEntry.getBlockOffset()) ^ blockTableEntry.getFileSize();
             }
             context.getLogger().debug("Adjusted key to: " + key);
         }
-        if(isComplete) {
+        if (isComplete) {
             context.getLogger().info("Extracting: " + fileName);
             context.getLogger().debug("File has " + blockTableEntry.getFileSize() + " bytes");
             ByteBuffer fileBytes = ByteBuffer.allocate(blockTableEntry.getFileSize());
             int sectorCount = 0;
-            for(FileSectorEntry sector : newSectors) {
+            for (FileSectorEntry sector : newSectors) {
                 context.getLogger().debug("Reading a sector...");
                 sector.readRawData(sectorCount);
                 sector.addBytes(fileBytes);
@@ -169,7 +219,7 @@ public class FileDataEntry implements IReadable {
             return fileBytes.array();
         } else {
             read(this.reader, key);
-            if(!isComplete) {
+            if (!isComplete) {
                 // For some reason, coulnd't read completely... avoid infinite loop.
                 context.getErrorHandler().handleCriticalError("Could not " +
                         "complete file data entry for " + fileName);

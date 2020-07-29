@@ -23,6 +23,7 @@ Feature: MPQ end to end tests
     When MPQ file is read
     Then MPQ should have 82 total files
     Then MPQ should have 82 known files
+    # There are actually 2 empty files.
     Then MPQ should have 0 unknown files
     Then File should exist: "Ls3.blp"
     When File is extracted: "Scripts\war3map.j"
@@ -34,4 +35,4 @@ Feature: MPQ end to end tests
     When File names are retrieved
     Then There should be 82 file names
     When All known files are extracted with listfile "listfile.txt"
-    Then 82 files should have been extracted
+    Then 84 files should have been extracted

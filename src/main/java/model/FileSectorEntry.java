@@ -100,6 +100,8 @@ public class FileSectorEntry {
                 byte compressionFlag = rawData[0];
                 fileData = ByteHelper.trimBytes(rawData, 1);
                 fileData = compressionHandler.decompress(fileData, compressionFlag, realSize);
+            } else {
+                fileData = rawData;
             }
             fileBytes.put(fileData);
             isProcessed = true;

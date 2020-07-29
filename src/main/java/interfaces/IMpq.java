@@ -56,6 +56,8 @@ public interface IMpq {
      * This is not necessarily the amount of files that can be known
      * or extracted, simply the number of block table entries.
      *
+     * Does not count empty files.
+     *
      * @return Total file count (theoretical)
      */
      int getFileCount();
@@ -63,12 +65,16 @@ public interface IMpq {
     /**
      * Returns the number of files that we know the name of.
      *
+     * Does not count empty files.
+     *
      * @return Number of known files.
      */
      int getKnownFileCount();
 
     /**
      * Returns the amount of files that we don't know the name of.
+     *
+     * Does not count empty files.
      *
      * @return  Number of unknown files
      */

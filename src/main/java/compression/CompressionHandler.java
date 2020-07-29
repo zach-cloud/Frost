@@ -1,5 +1,6 @@
 package compression;
 
+import interfaces.IGenericCompression;
 import settings.MpqContext;
 
 public class CompressionHandler {
@@ -12,11 +13,26 @@ public class CompressionHandler {
     private static final byte BZIP2 = 0x10;
 
     private DeflationCompression deflationCompression;
+    private AdpcmCompression stereoCompression;
+    private AdpcmCompression monoCompression;
     private MpqContext context;
 
     public CompressionHandler(MpqContext context) {
         this.deflationCompression = new DeflationCompression();
+        this.stereoCompression = new AdpcmCompression(2);
+        this.monoCompression = new AdpcmCompression(1);
         this.context = context;
+    }
+
+    private byte[] applyGenericDecompress(byte[] data, IGenericCompression whichCompression,
+                                          String compressionName, int desiredSize) {
+        context.getLogger().debug
+                ("Applying " + compressionName + " to origin data (src = " +
+                        data.length + " dest = " + desiredSize + ")");
+        byte[] tmp = new byte[desiredSize];
+        tmp = whichCompression.undo(data, tmp);
+        context.getLogger().debug(compressionName + " OK (size = " + tmp.length + ")");
+        return tmp;
     }
 
     public byte[] decompress(byte[] data, int compressionFlag, int desiredSize) {
@@ -36,26 +52,20 @@ public class CompressionHandler {
                     handleCriticalError("Not yet written (Implode)");
         }
         if(deflatedCompressed) {
-            context.getLogger().debug
-                    ("Applying inflation to origin data (src = " +
-                            data.length + " dest = " + desiredSize + ")");
-            byte[] tmp = new byte[desiredSize];
-            tmp = deflationCompression.undo(data, tmp);
-            data = tmp;
-            context.getLogger().debug("Inflation OK (size = " + data.length + ")");
+            data = applyGenericDecompress(data, deflationCompression,
+                    "Inflate", desiredSize);
         }
         if(huffmanCompressed) {
             context.getErrorHandler().
                     handleCriticalError("Not yet written (Huffman)");
         }
         if(stereoCompressed) {
-            // TODO: Add me.
-            context.getErrorHandler().
-                    handleCriticalError("Not yet written (Stereo)");
+            data = applyGenericDecompress(data, stereoCompression,
+                    "Stereo", desiredSize);
         }
         if(monoCompressed) {
-            context.getErrorHandler().
-                    handleCriticalError("Not yet written (Mono)");
+            data = applyGenericDecompress(data, monoCompression,
+                    "Mono", desiredSize);
         }
 
         return data;

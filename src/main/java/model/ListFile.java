@@ -50,8 +50,6 @@ public class ListFile {
             context.getErrorHandler().handleCriticalError("Could not read internal listfile: "
                     + ex.getMessage());
         }
-        add("(listfile)");
-        add("(attributes)");
     }
 
     public void add(String entry) {

@@ -105,7 +105,6 @@ public class MpqStepDefs {
     @Then("{int} files should have been extracted")
     public void files_should_have_been_extracted(int count) throws Exception {
         Mockito.verify(mockFileWriter, Mockito.times(count)).write(any(), any());
-
     }
 
     @Then("There should be {int} file names")

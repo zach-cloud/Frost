@@ -125,6 +125,8 @@ public class MpqObject implements IReadable {
             // We want to do this in memory.
             String listfileData = new String(getFileBytes("(listfile)"));
             listfile = new ListFile(listfileData, this, context);
+            addFileName("(listfile)");
+            addFileName("(attributes)");
             context.getLogger().info("Internal listfile had " + listfile.getEntries().size()
                     + " entries out of " + blockTable.getEntries().size() + " total entries");
         } else {
