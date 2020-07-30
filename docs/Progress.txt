@@ -3,3 +3,4 @@ Next steps:
 - Add Save functionality
 - Add Import functionality
 - Program the rest of the compressions
+- Fix spazzled map parsing

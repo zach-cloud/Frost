@@ -32,14 +32,14 @@ public class BlockTableEntry {
         compressed = (flags & 0x00000200) != 0;
         imploded = (flags & 0x00000100) != 0;
         if(keyAdjusted && !encrypted) {
-            context.getErrorHandler().handleError("Block cannot be key adjusted and not encrypted");
+            context.getLogger().warn("Block cannot be key adjusted and not encrypted");
         }
         if(!isFile) {
             if(blockSize > 0) {
-                context.getErrorHandler().handleError("Block is not a file but has size");
+                context.getLogger().warn("Block is not a file but has size");
             }
             if(singleUnit || keyAdjusted || encrypted || compressed || imploded) {
-                context.getErrorHandler().handleError("Block is not a file but has flags");
+                context.getLogger().warn("Block is not a file but has flags");
             }
         }
     }

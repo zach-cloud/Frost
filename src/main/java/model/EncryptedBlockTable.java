@@ -3,13 +3,11 @@ package model;
 import interfaces.IReadable;
 import reader.BinaryReader;
 import settings.MpqContext;
+import storm.StormConstants;
 
 import java.io.IOException;
 
 public class EncryptedBlockTable implements IReadable {
-
-    /* Each block table entry is 4 int32, = 16 bytes. */
-    public static final int BYTES_PER_BLOCK_TABLE_ENTRY = 16;
 
     private byte[] encryptedData;
 
@@ -33,16 +31,12 @@ public class EncryptedBlockTable implements IReadable {
     @Override
     public void read(BinaryReader reader) {
         try {
-            int size = entryCount * BYTES_PER_BLOCK_TABLE_ENTRY;
+            int size = entryCount * StormConstants.BYTES_PER_BLOCK_TABLE_ENTRY;
             encryptedData = reader.readBytes(size);
             context.getLogger().debug("Read " + size + " bytes as encrypted block table");
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-    }
-
-    public static int getBytesPerBlockTableEntry() {
-        return BYTES_PER_BLOCK_TABLE_ENTRY;
     }
 
     public void setEncryptedData(byte[] encryptedData) {

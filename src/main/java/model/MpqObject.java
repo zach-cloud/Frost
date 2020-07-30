@@ -102,16 +102,25 @@ public class MpqObject implements IReadable {
 
     private void readFileData(BinaryReader reader, int headerStart) {
         this.fileData = new ArrayList<>();
+        int lastValidEntry = (int)hashTable.size();
+
         for(HashTableEntry hashTableEntry: hashTable.getEntries()) {
             // We only care about entries with contents
+            int blockTableIndex = hashTableEntry.getFileBlockIndex() & lastValidEntry;
+
             if(hashTableEntry.getFileBlockIndex() != StormConstants.MPQ_HASH_ENTRY_DELETED &&
                     hashTableEntry.getFileBlockIndex() != StormConstants.MPQ_HASH_ENTRY_EMPTY) {
                 // Get associated block table entry
-                BlockTableEntry blockTableEntry = blockTable.get(hashTableEntry.getFileBlockIndex());
-                FileDataEntry fileDataEntry = new FileDataEntry(headerStart, stormSecurity, blockTableEntry.getBlockOffset() + headerStart, archiveHeader, blockTableEntry, hashTableEntry, context);
-                context.getLogger().debug("Reading block table entry position=" + hashTableEntry.getFileBlockIndex());
-                fileDataEntry.read(reader);
-                fileData.add(fileDataEntry);
+                if(blockTableIndex < blockTable.getEntries().size()
+                        && blockTableIndex >= 0) {
+                    BlockTableEntry blockTableEntry = blockTable.get(blockTableIndex);
+                    FileDataEntry fileDataEntry = new FileDataEntry(headerStart, stormSecurity, blockTableEntry.getBlockOffset() + headerStart, archiveHeader, blockTableEntry, hashTableEntry, context);
+                    context.getLogger().debug("Reading block table entry position=" + hashTableEntry.getFileBlockIndex());
+                    fileDataEntry.read(reader);
+                    fileData.add(fileDataEntry);
+                } else {
+                    context.getLogger().warn("Invalid block table entry point: " + hashTableEntry.getFileBlockIndex() + ". Ignored.");
+                }
             }
         }
     }

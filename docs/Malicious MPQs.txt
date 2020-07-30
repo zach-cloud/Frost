@@ -1,2 +1,13 @@
 The following are some behavior that have been observed of malicious MPQ files:
 - Adding a hash table entry that references a block table entry that does not exist
+- Damaging the block table by setting size to be too large.
+- Setting block table flags to an invalid combination (such as non-encrypted, but key adjusted)
+- Corrupting the language and platform of a hash table entry
+- Adding a hash table entry with a negative block table index
+
+These issues can be resolved by the following steps:
+- ???
+- Calculate the total number of bytes available past the offset and divide by 16. That is the real block table size.
+- Ignore the invalid flags. I need to investigate whether encrypted = false and key adjusted = true is actually encrypted or not.
+- Ignore the corrupted language/platform. These values do not matter anyways.
+- ???

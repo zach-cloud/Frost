@@ -1,5 +1,6 @@
 package model;
 
+import helper.MaliciousMPQHelper;
 import interfaces.IReadable;
 import reader.BinaryReader;
 import settings.MpqContext;
@@ -48,6 +49,7 @@ public class ArchiveHeader implements IReadable {
             blockTableOffset = reader.readInt();
             hashTableEntries = reader.readInt();
             blockTableEntries = reader.readInt();
+            blockTableEntries = MaliciousMPQHelper.fixBlockTableSize(blockTableEntries, archiveSize, blockTableOffset);
             if(format == 1) {
                 extendedBlockTableOffset = reader.readLong();
                 hashTableOffsetHigh = reader.readShort();

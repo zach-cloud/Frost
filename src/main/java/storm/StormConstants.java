@@ -17,6 +17,8 @@ public interface StormConstants {
     int MPQ_HASH_NAME_B = 2;
     int MPQ_HASH_FILE_KEY = 3;
 
+    int BYTES_PER_BLOCK_TABLE_ENTRY = 16;
+
     /** FrozenMPQ external constants */
     short ANY_PLATFORM = -2;
     short ANY_LANGUAGE = -2;
