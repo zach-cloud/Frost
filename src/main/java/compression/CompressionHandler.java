@@ -3,8 +3,12 @@ package compression;
 import interfaces.IGenericCompression;
 import settings.MpqContext;
 
+/**
+ * Handles compression types based off compression flags.
+ */
 public class CompressionHandler {
 
+    /* Compression flag constants */
     private static final byte IMAADPCM_STEREO = 0x40;
     private static final byte IMAADPCM_MONO = -0x80;
     private static final byte HUFFMAN = 0x01;
@@ -12,15 +16,17 @@ public class CompressionHandler {
     private static final byte IMPLODE = 0x08;
     private static final byte BZIP2 = 0x10;
 
-    private DeflationCompression deflationCompression;
-    private AdpcmCompression stereoCompression;
-    private AdpcmCompression monoCompression;
+    private IGenericCompression deflationCompression;
+    private IGenericCompression stereoCompression;
+    private IGenericCompression monoCompression;
+    private IGenericCompression implodeCompression;
     private MpqContext context;
 
     public CompressionHandler(MpqContext context) {
         this.deflationCompression = new DeflationCompression();
         this.stereoCompression = new AdpcmCompression(2);
         this.monoCompression = new AdpcmCompression(1);
+        this.implodeCompression = new ImplodeCompression();
         this.context = context;
     }
 
@@ -48,8 +54,8 @@ public class CompressionHandler {
                     handleCriticalError("Not yet written (Bzip)");
         }
         if(implodedCompressed) {
-            context.getErrorHandler().
-                    handleCriticalError("Not yet written (Implode)");
+            data = applyGenericDecompress(data, implodeCompression,
+                    "Implode", desiredSize);
         }
         if(deflatedCompressed) {
             data = applyGenericDecompress(data, deflationCompression,
