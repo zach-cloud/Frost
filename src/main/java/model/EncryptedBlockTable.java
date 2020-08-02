@@ -1,5 +1,6 @@
 package model;
 
+import helper.MaliciousMPQHelper;
 import interfaces.IReadable;
 import reader.BinaryReader;
 import settings.MpqContext;

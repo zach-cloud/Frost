@@ -4,7 +4,6 @@ import exception.EncryptionException;
 import exception.HashingException;
 import helper.ByteHelper;
 import interfaces.IStormCrypt;
-import model.BlockTableEntry;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -119,7 +118,7 @@ public class StormSecurity implements IStormCrypt {
 
         s = s.toUpperCase();
         for (char c : s.toCharArray()) {
-            ch = c;
+            ch = Byte.toUnsignedInt((byte)c);
             seed1 = encryptionTable[(hashType * 0x100) + ch] ^ (seed1 + seed2);
             seed2 = ch + seed1 + seed2 + (seed2 << 5) + 3;
         }
@@ -161,7 +160,7 @@ public class StormSecurity implements IStormCrypt {
         int[] encryptedArray = new int[len];
         int seed = INITIAL_ENCRYPT_SEED;
         for (int i = 0; i < len; i++) {
-            seed += encryptionTable[0x400 + (key & 0xFF)];
+            seed += encryptionTable[getLookupIndexEncrypt(key)];
             int base = key + seed;
             int current = src[i];
             int res = current ^ base;
@@ -214,7 +213,7 @@ public class StormSecurity implements IStormCrypt {
         int[] decryptedArray = new int[len];
         int seed = INITIAL_ENCRYPT_SEED;
         for (int i = 0; i < len; i++) {
-            seed += encryptionTable[(0x400 + (key & 0xFF))];
+            seed += encryptionTable[getLookupIndexEncrypt(key)];
             int base = key + seed;
             int currentValue = src[i];
             int decryptResult = currentValue ^ base;
@@ -343,9 +342,13 @@ public class StormSecurity implements IStormCrypt {
         return ByteBuffer.wrap(encryptBytes(src.array(), key)).order(byteOrder);
     }
 
-    public static void main(String[] args) {
-        int test = 518313807;
-        System.out.println(new StormSecurity().decrypt(test, 758105132));
-
+    /**
+     * Gets the array index for this key.
+     *
+     * @param key   Key value
+     * @return      Array index to lookup
+     */
+    private int getLookupIndexEncrypt(int key) {
+        return (0x400 + (key & 0xFF)) % encryptionTable.length;
     }
 }

@@ -4,11 +4,19 @@ import settings.MpqContext;
 
 public class HashTableEntry {
 
+    /** Stores hashes of file for comparison */
     private int filePathHashA;
     private int filePathHashB;
+
+    /** We really don't care about these. */
     private short language;
     private short platform;
+
+    /** Index into the block table to search for */
     private int fileBlockIndex;
+
+    /** Array index callback for debugging */
+    private int callbackId;
     private MpqContext context;
 
     public HashTableEntry(int filePathHashA, int filePathHashB, short language, short platform, int fileBlockIndex, MpqContext context) {
@@ -66,5 +74,13 @@ public class HashTableEntry {
 
     public void setContext(MpqContext context) {
         this.context = context;
+    }
+
+    public int getCallbackId() {
+        return callbackId;
+    }
+
+    public void setCallbackId(int callbackId) {
+        this.callbackId = callbackId;
     }
 }

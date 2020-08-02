@@ -82,6 +82,13 @@ public class ByteHelper {
         return byteToShort(src, ByteOrder.LITTLE_ENDIAN);
     }
 
+    /**
+     * Trims bytes off the beginning of the data.
+     *
+     * @param rawData   Original bytes
+     * @param offset    Offset to trim from
+     * @return          Shorter byte array (length - offset)
+     */
     public static byte[] trimBytes(byte[] rawData, int offset) {
         byte[] newBytes = new byte[rawData.length - offset];
         for(int i = offset; i < rawData.length; i++) {
@@ -90,14 +97,21 @@ public class ByteHelper {
         return newBytes;
     }
 
-    public static byte[] combineBytes(byte[] intArrayToBytes, byte[] endBuffer) {
-        int totalLength = intArrayToBytes.length + endBuffer.length;
+    /**
+     * Combines two byte arrays together
+     *
+     * @param originalBytes Byte array (part 1)
+     * @param toAppend      Byte array (part 2 to add)
+     * @return              Result array, part 1 + part 2
+     */
+    public static byte[] combineBytes(byte[] originalBytes, byte[] toAppend) {
+        int totalLength = originalBytes.length + toAppend.length;
         byte[] newBytes = new byte[totalLength];
-        for(int i = 0; i < intArrayToBytes.length; i++) {
-            newBytes[i] = intArrayToBytes[i];
+        for(int i = 0; i < originalBytes.length; i++) {
+            newBytes[i] = originalBytes[i];
         }
-        for(int i = 0; i < endBuffer.length; i++) {
-            newBytes[i + intArrayToBytes.length] = endBuffer[i];
+        for(int i = 0; i < toAppend.length; i++) {
+            newBytes[i + originalBytes.length] = toAppend[i];
         }
         return newBytes;
     }

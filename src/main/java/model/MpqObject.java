@@ -102,19 +102,24 @@ public class MpqObject implements IReadable {
 
     private void readFileData(BinaryReader reader, int headerStart) {
         this.fileData = new ArrayList<>();
-        int lastValidEntry = (int)hashTable.size();
+        int lastValidEntry = blockTable.getEntries().size();
 
         for(HashTableEntry hashTableEntry: hashTable.getEntries()) {
             // We only care about entries with contents
-            int blockTableIndex = hashTableEntry.getFileBlockIndex() & lastValidEntry;
+            int blockTableIndex = hashTableEntry.getFileBlockIndex() % lastValidEntry;
 
+            if(hashTableEntry.getCallbackId() == 25) {
+                System.out.println("Here...");
+            }
             if(hashTableEntry.getFileBlockIndex() != StormConstants.MPQ_HASH_ENTRY_DELETED &&
                     hashTableEntry.getFileBlockIndex() != StormConstants.MPQ_HASH_ENTRY_EMPTY) {
                 // Get associated block table entry
                 if(blockTableIndex < blockTable.getEntries().size()
                         && blockTableIndex >= 0) {
                     BlockTableEntry blockTableEntry = blockTable.get(blockTableIndex);
-                    FileDataEntry fileDataEntry = new FileDataEntry(headerStart, stormSecurity, blockTableEntry.getBlockOffset() + headerStart, archiveHeader, blockTableEntry, hashTableEntry, context);
+                    FileDataEntry fileDataEntry = new FileDataEntry(headerStart, stormSecurity,
+                            blockTableEntry.getBlockOffset() + headerStart,
+                            archiveHeader, blockTableEntry, hashTableEntry, context);
                     context.getLogger().debug("Reading block table entry position=" + hashTableEntry.getFileBlockIndex());
                     fileDataEntry.read(reader);
                     fileData.add(fileDataEntry);
@@ -172,6 +177,12 @@ public class MpqObject implements IReadable {
         return entry;
     }
 
+    private ByteBuffer reallocate(ByteBuffer original, int length) {
+        ByteBuffer newBuffer = ByteBuffer.allocate(length);
+        newBuffer.put(original);
+        return newBuffer;
+    }
+
     /**
      * Retrieves all bytes for the specified file.
      *
@@ -179,14 +190,27 @@ public class MpqObject implements IReadable {
      * @return          Byte array of uncompressed file data
      */
     public byte[] getFileBytes(String fileName) {
-        HashTableEntry entry = findEntry(fileName);
-        ByteBuffer totalBytes = ByteBuffer.allocate(blockTable.get(entry.getFileBlockIndex()).getFileSize());
-        for(FileDataEntry fileDataEntry: fileData) {
-            if(fileDataEntry.getHashTableEntry() == entry) {
-                totalBytes.put(fileDataEntry.getFileBytes(fileName));
+        try {
+            HashTableEntry entry = findEntry(fileName);
+            ByteBuffer totalBytes = ByteBuffer.allocate(0);
+            for (FileDataEntry fileDataEntry : fileData) {
+                if (fileDataEntry.getHashTableEntry() == entry) {
+                    byte[] bytesToAdd = fileDataEntry.getFileBytes(fileName);
+                    if(bytesToAdd.length + totalBytes.position() > totalBytes.capacity()) {
+                        context.getLogger().debug("Reallocating to: " + bytesToAdd.length + totalBytes.position());
+                        totalBytes = reallocate(totalBytes, bytesToAdd.length + totalBytes.position());
+                    }
+                    context.getLogger().debug("Adding " + bytesToAdd.length + " bytes");
+                    totalBytes.put(bytesToAdd);
+                }
             }
+            return totalBytes.array();
+        } catch (Exception ex) {
+            context.getErrorHandler().handleError("Could not add bytes to " +
+                    "final file due to: " + ex.getMessage());
+            ex.printStackTrace();
+            return new byte[0];
         }
-        return totalBytes.array();
     }
 
     /**

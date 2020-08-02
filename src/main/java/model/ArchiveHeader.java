@@ -43,6 +43,7 @@ public class ArchiveHeader implements IReadable {
             magic = reader.readString(4);
             headerSize = reader.readInt();
             archiveSize = reader.readInt();
+            archiveSize = MaliciousMPQHelper.fixArchiveSize(archiveSize, reader, offsetStart);
             format = reader.readShort();
             sectorSizeShift = reader.readShort();
             hashTableOffset = reader.readInt();

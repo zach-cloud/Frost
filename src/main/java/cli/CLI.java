@@ -18,7 +18,7 @@ public class CLI {
         if (!inFile.contains(".")) {
             inFile = inFile + ".w3x";
         }
-        MpqSettings settings = new MpqSettings(MpqSettings.LogSettings.INFO);
+        MpqSettings settings = new MpqSettings(MpqSettings.LogSettings.DEBUG, MpqSettings.MpqOpenSettings.CRITICAL);
 
         Mpq mpq = new Mpq(inFile, settings);
         System.out.print("Enter action type (extract/list/extractAllKnown/count/countKnown): ");

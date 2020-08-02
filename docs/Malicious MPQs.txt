@@ -4,6 +4,8 @@ The following are some behavior that have been observed of malicious MPQ files:
 - Setting block table flags to an invalid combination (such as non-encrypted, but key adjusted)
 - Corrupting the language and platform of a hash table entry
 - Adding a hash table entry with a negative block table index
+- Adding a fake header. This comes before the actual header and has garbage values.
+- Setting archive size to a too-large amount.
 
 These issues can be resolved by the following steps:
 - ???
@@ -11,3 +13,4 @@ These issues can be resolved by the following steps:
 - Ignore the invalid flags. I need to investigate whether encrypted = false and key adjusted = true is actually encrypted or not.
 - Ignore the corrupted language/platform. These values do not matter anyways.
 - ???
+- Make sure the header reading code works properly and finds the last instance of MPQ header.

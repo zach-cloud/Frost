@@ -42,6 +42,7 @@ public class HashTable {
             byte[] fileBlockIndex = extractBytes(decryptedData, 12 + (i * HASH_TABLE_ENTRY_SIZE), 4);
             HashTableEntry entry = new HashTableEntry(byteToInt(filePathHashA), byteToInt(filePathHashB),
                     byteToShort(language), byteToShort(platform), byteToInt(fileBlockIndex), context);
+            entry.setCallbackId(i);
             entries.add(entry);
         }
         context.getLogger().info("Hash table has " + entries.size() + " entries");

@@ -67,11 +67,16 @@ public class BinaryReader {
     }
 
     public void goTo(String flag) throws IOException {
-        int size = flag.length();
-        byte currentByte = 0;
-        byte currentLetterByte = 0;
-        int currentLetter = 0;
-        while (currentLetter != size) {
+        int size = flag.length(); // Length of the word to search for
+        byte currentByte;   // Current byte read from buffer
+        byte currentLetterByte; // Current byte in the
+        int currentLetter = 0;  // Current match length that we have found so far
+        int position = stream.position();   // How many we have read
+        int correctPosition = 0; // What position we will return
+        int maxLength = stream.array().length;
+        // Scan entire buffer from current position
+        while (stream.position() < maxLength) {
+            position++;
             currentByte = readByte();
             currentLetterByte = (byte) flag.charAt(currentLetter);
             if (currentByte == currentLetterByte) {
@@ -79,15 +84,24 @@ public class BinaryReader {
             } else {
                 if (currentLetter > 0) {
                     for (int i = 0; i < currentLetter; i++) {
+                        // Correctly handle undo stack.
                         undo();
                     }
                 }
                 currentLetter = 0;
             }
+            if(currentLetter == size) {
+                // We found a match. Reset and track this match.
+                correctPosition = stream.position() - size;
+                currentLetter = 0;
+            }
         }
         for (int i = 0; i < currentLetter; i++) {
+            // Correctly handle undo stack.
             undo();
         }
+        // Go to correct location
+        goTo(correctPosition);
     }
 
     public void goTo(int flag) {
@@ -253,5 +267,9 @@ public class BinaryReader {
 
     public void setPosition(int start) {
         stream.position(start);
+    }
+
+    public int getSize() {
+        return stream.array().length;
     }
 }

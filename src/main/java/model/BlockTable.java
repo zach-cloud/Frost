@@ -41,6 +41,7 @@ public class BlockTable {
             byte[] flags = extractBytes(decryptedData, 12 + (i * BLOCK_TABLE_ENTRY_SIZE), 4);
             BlockTableEntry entry = new BlockTableEntry(byteToInt(blockOffset),
                     byteToInt(blockSize), byteToInt(fileSize), byteToInt(flags), context);
+            entry.setCallbackId(i);
             entries.add(entry);
         }
         context.getLogger().info("Block table has " + entries.size() + " entries");
