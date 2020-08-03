@@ -1,14 +1,17 @@
 package model;
 
-import helper.MaliciousMPQHelper;
 import interfaces.IReadable;
+import interfaces.IByteSerializable;
 import reader.BinaryReader;
 import settings.MpqContext;
 import storm.StormConstants;
+import storm.StormSecurity;
 
 import java.io.IOException;
 
-public class EncryptedBlockTable implements IReadable {
+import static storm.StormConstants.BLOCK_TABLE_ENCRYPTION_KEY;
+
+public class EncryptedBlockTable implements IReadable, IByteSerializable {
 
     private byte[] encryptedData;
 
@@ -20,7 +23,22 @@ public class EncryptedBlockTable implements IReadable {
         this.context = context;
     }
 
+    public void encrypt(byte[] array, StormSecurity security) {
+        this.encryptedData = security.encryptBytes(array, BLOCK_TABLE_ENCRYPTION_KEY);
+    }
+
     public byte[] getEncryptedData() {
+        return encryptedData;
+    }
+
+    /**
+     * Converts this object into a byte array which represents
+     * the same state as the object.
+     *
+     * @return  Byte array of object.
+     */
+    @Override
+    public byte[] toBytes() {
         return encryptedData;
     }
 

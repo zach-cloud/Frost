@@ -2,10 +2,14 @@ package model;
 
 import helper.MaliciousMPQHelper;
 import interfaces.IReadable;
+import interfaces.IByteSerializable;
 import reader.BinaryReader;
 import settings.MpqContext;
 
-public class ArchiveHeader implements IReadable {
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+
+public class ArchiveHeader implements IReadable, IByteSerializable {
 
     private int offsetStart;
     private String magic = ""; //char4
@@ -24,6 +28,8 @@ public class ArchiveHeader implements IReadable {
     // Calculated
     private int sectorSize; // How many bytes per sector
 
+    private int discoveredHeaderSize;
+
     private MpqContext context;
 
     public ArchiveHeader(MpqContext context) {
@@ -39,6 +45,7 @@ public class ArchiveHeader implements IReadable {
     public void read(BinaryReader reader) {
         try {
             reader.goTo("MPQ");
+            int start = reader.getPosition();
             offsetStart = reader.getPosition();
             magic = reader.readString(4);
             headerSize = reader.readInt();
@@ -51,13 +58,18 @@ public class ArchiveHeader implements IReadable {
             hashTableEntries = reader.readInt();
             blockTableEntries = reader.readInt();
             blockTableEntries = MaliciousMPQHelper.fixBlockTableSize(blockTableEntries, archiveSize, blockTableOffset);
-            if(format == 1) {
+            if (format == 1) {
                 extendedBlockTableOffset = reader.readLong();
                 hashTableOffsetHigh = reader.readShort();
                 blockTableOffsetHigh = reader.readShort();
+                discoveredHeaderSize = 2 + reader.getPosition() - start;
+            } else {
+                discoveredHeaderSize = 4 + reader.getPosition() - start;
             }
 
-            sectorSize = 512 * (int)(Math.pow(2, sectorSizeShift));
+            sectorSize = 512 * (int) (Math.pow(2, sectorSizeShift));
+
+            context.getLogger().debug("Header size: " + discoveredHeaderSize + " bytes");
             context.getLogger().debug("Sector size: " + sectorSize);
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -65,6 +77,35 @@ public class ArchiveHeader implements IReadable {
         }
     }
 
+    /**
+     * Converts this object into a byte array which represents
+     * the same state as the object.
+     *
+     * @return Byte array of object.
+     */
+    @Override
+    public byte[] toBytes() {
+        ByteBuffer buffer = ByteBuffer.allocate(discoveredHeaderSize);
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+        buffer.putInt(offsetStart);
+        buffer.put(magic.getBytes());
+        buffer.putInt(headerSize);
+        buffer.putInt(archiveSize);
+        buffer.putShort((short) format);
+        buffer.putShort((short) sectorSizeShift);
+        buffer.putInt(hashTableOffset);
+        buffer.putInt(blockTableOffset);
+        buffer.putInt(hashTableEntries);
+        buffer.putInt(blockTableEntries);
+
+        if (format == 1) {
+            buffer.putLong(extendedBlockTableOffset);
+            buffer.putShort((short)hashTableOffsetHigh);
+            buffer.putShort((short)blockTableOffsetHigh);
+        }
+
+        return buffer.array();
+    }
 
     public String getMagic() {
         return magic;

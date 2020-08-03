@@ -1,8 +1,9 @@
 package model;
 
+import interfaces.IByteSerializable;
 import settings.MpqContext;
 
-public class HashTableEntry {
+public class HashTableEntry implements IByteSerializable {
 
     /** Stores hashes of file for comparison */
     private int filePathHashA;
@@ -26,6 +27,17 @@ public class HashTableEntry {
         this.platform = platform;
         this.fileBlockIndex = fileBlockIndex;
         this.context = context;
+    }
+
+    /**
+     * Converts this object into a byte array which represents
+     * the same state as the object.
+     *
+     * @return  Byte array of object.
+     */
+    @Override
+    public byte[] toBytes() {
+        return new byte[0];
     }
 
     public int getFilePathHashA() {

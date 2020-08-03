@@ -1,5 +1,6 @@
 package model;
 
+import interfaces.IByteSerializable;
 import storm.StormSecurity;
 import settings.MpqContext;
 
@@ -9,7 +10,7 @@ import java.util.List;
 import static storm.StormConstants.HASH_TABLE_ENCRYPTION_KEY;
 import static helper.ByteHelper.*;
 
-public class HashTable {
+public class HashTable implements IByteSerializable {
 
     private static final int HASH_TABLE_ENTRY_SIZE = 16; // 16 bytes = 4 * int32
     private List<HashTableEntry> entries;
@@ -46,6 +47,17 @@ public class HashTable {
             entries.add(entry);
         }
         context.getLogger().info("Hash table has " + entries.size() + " entries");
+    }
+
+    /**
+     * Converts this object into a byte array which represents
+     * the same state as the object.
+     *
+     * @return  Byte array of object.
+     */
+    @Override
+    public byte[] toBytes() {
+        return new byte[0];
     }
 
     public List<HashTableEntry> getEntries() {

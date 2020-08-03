@@ -1,5 +1,6 @@
 package model;
 
+import interfaces.IByteSerializable;
 import storm.StormConstants;
 import storm.StormSecurity;
 import storm.StormUtility;
@@ -10,12 +11,12 @@ import settings.MpqContext;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-public class MpqObject implements IReadable {
+public class MpqObject implements IReadable, IByteSerializable {
 
     private StormUtility stormUtility;
     private StormSecurity stormSecurity;
@@ -39,6 +40,16 @@ public class MpqObject implements IReadable {
     private StrongSignature strongSignature;
     private WeakSignature weakSignature;
 
+    // Whatever came before the header
+    private byte[] preHeader;
+
+    // Archive offsets
+    int blockTableStart;
+    int hashTableStart;
+    long extendedBlockTableOffset;
+    int hashTableOffsetHigh;
+    int blockTableOffsetHigh;
+
     private MpqContext context;
 
     public MpqObject(MpqContext context) {
@@ -52,38 +63,46 @@ public class MpqObject implements IReadable {
      */
     @Override
     public void read(BinaryReader reader) {
-        // Initialize helper components
-        this.stormSecurity = new StormSecurity();
-        this.stormUtility = new StormUtility(stormSecurity, context);
+        try {
+            // Initialize helper components
+            this.stormSecurity = new StormSecurity();
+            this.stormUtility = new StormUtility(stormSecurity, context);
 
-        // Read header - starts at the beginning of MPQ Archive part
-        archiveHeader = new ArchiveHeader(context);
-        archiveHeader.read(reader);
+            // Read header - starts at the beginning of MPQ Archive part
+            archiveHeader = new ArchiveHeader(context);
+            archiveHeader.read(reader);
 
-        // Save positions
-        int headerStart = archiveHeader.getOffsetStart();
-        int headerEnd = reader.getPosition();
+            // Save positions
+            int headerStart = archiveHeader.getOffsetStart();
+            int headerEnd = reader.getPosition();
 
-        // Calculate some offsets
-        int blockTableStart = archiveHeader.getBlockTableOffset() + headerStart;
-        int hashTableStart = archiveHeader.getHashTableOffset() + headerStart;
-        long extendedBlockTableOffset = archiveHeader.getExtendedBlockTableOffset() + headerStart;
-        int hashTableOffsetHigh = archiveHeader.getHashTableOffsetHigh() + headerStart;
-        int blockTableOffsetHigh = archiveHeader.getBlockTableOffsetHigh() + headerStart;
+            // Calculate some offsets
+            blockTableStart = archiveHeader.getBlockTableOffset() + headerStart;
+            hashTableStart = archiveHeader.getHashTableOffset() + headerStart;
+            extendedBlockTableOffset = archiveHeader.getExtendedBlockTableOffset() + headerStart;
+            hashTableOffsetHigh = archiveHeader.getHashTableOffsetHigh() + headerStart;
+            blockTableOffsetHigh = archiveHeader.getBlockTableOffsetHigh() + headerStart;
 
-        // Log some diagnostic data to debug.
-        context.getLogger().debug("headerStart=" + headerStart + ",headerEnd="
-                + headerEnd + ",blockTableStart=" + blockTableStart + ",hashTableStart="
-                + hashTableStart + ",extendedBlockTableOffset=" + extendedBlockTableOffset
-                + ",hashTableOffsetHigh=" + hashTableOffsetHigh + ",blockTableOffsetHigh="
-                + blockTableOffsetHigh);
+            // Log some diagnostic data to debug.
+            context.getLogger().debug("headerStart=" + headerStart + ",headerEnd="
+                    + headerEnd + ",blockTableStart=" + blockTableStart + ",hashTableStart="
+                    + hashTableStart + ",extendedBlockTableOffset=" + extendedBlockTableOffset
+                    + ",hashTableOffsetHigh=" + hashTableOffsetHigh + ",blockTableOffsetHigh="
+                    + blockTableOffsetHigh);
 
-        readBlockTable(reader, blockTableStart);
-        readHashTable(reader, hashTableStart);
-        readFileData(reader, headerStart);
-        context.getLogger().info("Successfully read " + fileData.size() + " files.");
-        extractInternalListfile();
-        // TODO: Read the rest of this garbage. (extended stuff)
+            reader.setPosition(0);
+            preHeader = reader.readBytes(headerStart);
+            readBlockTable(reader, blockTableStart);
+            readHashTable(reader, hashTableStart);
+            readFileData(reader, headerStart);
+            context.getLogger().info("Successfully read " + fileData.size() + " files.");
+            extractInternalListfile();
+            // TODO: Read the rest of this garbage. (extended stuff)
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            context.getErrorHandler().handleCriticalError(
+                    "Failed to build MPQ file: " + ex.getMessage());
+        }
     }
 
     private void readBlockTable(BinaryReader reader, int blockTableStart) {
@@ -107,10 +126,6 @@ public class MpqObject implements IReadable {
         for(HashTableEntry hashTableEntry: hashTable.getEntries()) {
             // We only care about entries with contents
             int blockTableIndex = hashTableEntry.getFileBlockIndex() % lastValidEntry;
-
-            if(hashTableEntry.getCallbackId() == 25) {
-                System.out.println("Here...");
-            }
             if(hashTableEntry.getFileBlockIndex() != StormConstants.MPQ_HASH_ENTRY_DELETED &&
                     hashTableEntry.getFileBlockIndex() != StormConstants.MPQ_HASH_ENTRY_EMPTY) {
                 // Get associated block table entry
@@ -211,6 +226,30 @@ public class MpqObject implements IReadable {
             ex.printStackTrace();
             return new byte[0];
         }
+    }
+
+    /**
+     * Converts this object into a byte array which represents
+     * the same state as the object.
+     *
+     * @return  Byte array of object.
+     */
+    @Override
+    public byte[] toBytes() {
+        ByteBuffer archiveBytes = ByteBuffer.allocate(preHeader.length +
+                archiveHeader.getArchiveSize());
+        archiveBytes.order(ByteOrder.LITTLE_ENDIAN);
+        archiveBytes.put(preHeader);
+        archiveBytes.put(archiveHeader.toBytes());
+        archiveBytes.position(blockTableStart);
+        archiveBytes.put(blockTable.toBytes());
+        archiveBytes.position(hashTableStart);
+        archiveBytes.put(hashTable.toBytes());
+        for(FileDataEntry fileDataEntry: fileData) {
+            archiveBytes.position(fileDataEntry.getInitialPosition());
+            archiveBytes.put(fileDataEntry.toBytes());
+        }
+        return archiveBytes.array();
     }
 
     /**

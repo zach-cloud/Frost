@@ -1,10 +1,11 @@
 package model;
 
 import interfaces.IReadable;
+import interfaces.IByteSerializable;
 import reader.BinaryReader;
 import settings.MpqContext;
 
-public class StrongSignature implements IReadable {
+public class StrongSignature implements IReadable, IByteSerializable {
 
     private MpqContext context;
 
@@ -19,6 +20,17 @@ public class StrongSignature implements IReadable {
      */
     @Override
     public void read(BinaryReader reader) {
+        throw new UnsupportedOperationException("Under development");
+    }
 
+    /**
+     * Converts this object into a byte array which represents
+     * the same state as the object.
+     *
+     * @return  Byte array of object.
+     */
+    @Override
+    public byte[] toBytes() {
+        throw new UnsupportedOperationException("Under development");
     }
 }

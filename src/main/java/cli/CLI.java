@@ -4,6 +4,7 @@ import mpq.Mpq;
 import settings.MpqSettings;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.util.Scanner;
 import java.util.Set;
 
@@ -21,7 +22,7 @@ public class CLI {
         MpqSettings settings = new MpqSettings(MpqSettings.LogSettings.DEBUG, MpqSettings.MpqOpenSettings.CRITICAL);
 
         Mpq mpq = new Mpq(inFile, settings);
-        System.out.print("Enter action type (extract/list/extractAllKnown/count/countKnown): ");
+        System.out.print("Enter action type (extract/list/extractAllKnown/count/countKnown/save): ");
 
         String actionType = scanner.nextLine();
         executeAction(scanner, mpq, actionType);
@@ -38,6 +39,9 @@ public class CLI {
             System.out.println("Total files: " + mpq.getFileCount());
         } else if (actionType.equalsIgnoreCase("countKnown")) {
             System.out.println("Known files: " + mpq.getFileCount());
+        } else if(actionType.equalsIgnoreCase("save")) {
+            mpq.save(new File("saved.w3x"));
+            System.out.println("File saved successfully");
         }
     }
 

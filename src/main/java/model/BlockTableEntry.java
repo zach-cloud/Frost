@@ -1,11 +1,17 @@
 package model;
 
+import interfaces.IByteSerializable;
 import settings.MpqContext;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+
+import static storm.StormConstants.BYTES_PER_BLOCK_TABLE_ENTRY;
 
 /**
  * Represents a single entry in the Block Table.
  */
-public class BlockTableEntry {
+public class BlockTableEntry implements IByteSerializable {
 
     /** Basic block information */
     private int blockOffset;
@@ -35,6 +41,23 @@ public class BlockTableEntry {
         this.context = context;
         calculateFlagValues();
         checkFlagValidity();
+    }
+
+    /**
+     * Converts this object into a byte array which represents
+     * the same state as the object.
+     *
+     * @return  Byte array of object.
+     */
+    @Override
+    public byte[] toBytes() {
+        ByteBuffer buffer = ByteBuffer.allocate(BYTES_PER_BLOCK_TABLE_ENTRY);
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+        buffer.putInt(blockOffset);
+        buffer.putInt(blockSize);
+        buffer.putInt(fileSize);
+        buffer.putInt(flags);
+        return buffer.array();
     }
 
     /**

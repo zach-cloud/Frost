@@ -1,5 +1,6 @@
 package model;
 
+import interfaces.IByteSerializable;
 import storm.StormConstants;
 import storm.StormSecurity;
 import interfaces.IReadable;
@@ -11,7 +12,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FileDataEntry implements IReadable {
+public class FileDataEntry implements IReadable, IByteSerializable {
 
     private int initialPosition;
     private int archiveOffset;
@@ -314,5 +315,16 @@ public class FileDataEntry implements IReadable {
 
     public void setReader(BinaryReader reader) {
         this.reader = reader;
+    }
+
+    /**
+     * Converts this object into a byte array which represents
+     * the same state as the object.
+     *
+     * @return  Byte array of object.
+     */
+    @Override
+    public byte[] toBytes() {
+        return new byte[0];
     }
 }

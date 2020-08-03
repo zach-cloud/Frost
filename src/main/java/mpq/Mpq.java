@@ -1,6 +1,7 @@
 package mpq;
 
 import interfaces.IMpq;
+import interfaces.IByteSerializable;
 import model.MpqObject;
 import reader.BinaryReader;
 import settings.MpqContext;
@@ -17,7 +18,7 @@ import java.util.Set;
 /**
  * Represents an MPQ archive that can be read, extracted, and modified.
  */
-public class Mpq implements IMpq {
+public class Mpq implements IMpq, IByteSerializable {
 
     /**
      * File that is an MPQ archive.
@@ -141,6 +142,31 @@ public class Mpq implements IMpq {
         if (!origin.exists()) {
             throw new IllegalArgumentException(
                     "File does not exist: " + origin.getAbsolutePath());
+        }
+    }
+
+    /**
+     * Converts this object into a byte array which represents
+     * the same state as the object.
+     *
+     * @return  Byte array of object.
+     */
+    @Override
+    public byte[] toBytes() {
+        return mpqObject.toBytes();
+    }
+
+    /**
+     * Saves this MPQ.
+     *
+     * @param destination File to save to.
+     */
+    @Override
+    public void save(File destination) {
+        try {
+            context.getFileWriter().write(toBytes(), destination);
+        } catch (Exception ex) {
+            context.getErrorHandler().handleCriticalError("Could not save file: " + ex.getMessage());
         }
     }
 

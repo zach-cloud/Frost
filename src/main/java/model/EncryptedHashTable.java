@@ -1,12 +1,17 @@
 package model;
 
 import interfaces.IReadable;
+import interfaces.IByteSerializable;
 import reader.BinaryReader;
 import settings.MpqContext;
+import storm.StormSecurity;
 
 import java.io.IOException;
 
-public class EncryptedHashTable implements IReadable {
+import static storm.StormConstants.BLOCK_TABLE_ENCRYPTION_KEY;
+import static storm.StormConstants.HASH_TABLE_ENCRYPTION_KEY;
+
+public class EncryptedHashTable implements IReadable, IByteSerializable {
 
     private static final int BYTES_PER_BLOCK_TABLE_ENTRY = 16;
 
@@ -19,6 +24,10 @@ public class EncryptedHashTable implements IReadable {
     public EncryptedHashTable (int entryCount, MpqContext context) {
         this.entryCount = entryCount;
         this.context = context;
+    }
+
+    public void encrypt(byte[] array, StormSecurity security) {
+        this.encryptedData = security.encryptBytes(array, HASH_TABLE_ENCRYPTION_KEY);
     }
 
     /**
@@ -35,6 +44,17 @@ public class EncryptedHashTable implements IReadable {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+    }
+
+    /**
+     * Converts this object into a byte array which represents
+     * the same state as the object.
+     *
+     * @return  Byte array of object.
+     */
+    @Override
+    public byte[] toBytes() {
+        return encryptedData;
     }
 
     public byte[] getEncryptedData() {

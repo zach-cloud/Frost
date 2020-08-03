@@ -80,4 +80,11 @@ public interface IMpq {
      */
     int getUnknownFileCount();
 
+    /**
+     * Saves this MPQ.
+     *
+     * @param destination File to save to.
+     */
+    void save(File destination);
+
 }
