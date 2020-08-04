@@ -36,6 +36,14 @@ public class ArchiveHeader implements IReadable, IByteSerializable {
         this.context = context;
     }
 
+    public String toString() {
+        return "magic=" + magic + ",headerSize=" + headerSize + "archiveSize=" + archiveSize + "format=" + format
+                + "sectorSizeShift=" + sectorSizeShift + "hashTableOffset=" + hashTableOffset + "blockTableOffset" +
+                blockTableOffset + "hashTableEntries=" + hashTableEntries + "blockTableEntries=" + blockTableEntries +
+                "extendedBlockTableOffset=" + extendedBlockTableOffset + "hashTableOffsetHigh=" + hashTableOffsetHigh +
+                "blockTableOffsetHigh=" + blockTableOffsetHigh;
+    }
+
     /**
      * Reads from the binary reader into this model object
      *
@@ -87,7 +95,6 @@ public class ArchiveHeader implements IReadable, IByteSerializable {
     public byte[] toBytes() {
         ByteBuffer buffer = ByteBuffer.allocate(discoveredHeaderSize);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
-        buffer.putInt(offsetStart);
         buffer.put(magic.getBytes());
         buffer.putInt(headerSize);
         buffer.putInt(archiveSize);
@@ -106,6 +113,8 @@ public class ArchiveHeader implements IReadable, IByteSerializable {
 
         return buffer.array();
     }
+
+
 
     public String getMagic() {
         return magic;

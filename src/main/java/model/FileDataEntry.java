@@ -9,6 +9,7 @@ import settings.MpqContext;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +29,7 @@ public class FileDataEntry implements IReadable, IByteSerializable {
     private int sectorsInFile;
 
     private int[] sectorOffsetTable;
+    private int[] originalOffsetTable;
 
     private MpqContext context;
     private BinaryReader reader;
@@ -55,6 +57,7 @@ public class FileDataEntry implements IReadable, IByteSerializable {
             sectorsInFile++;
         }
         this.sectorOffsetTable = new int[sectorsInFile + 1];
+        this.originalOffsetTable = new int[sectorsInFile + 1];
     }
 
     private void read(BinaryReader reader, int key) {
@@ -74,7 +77,6 @@ public class FileDataEntry implements IReadable, IByteSerializable {
                 context.getLogger().debug("Reading data with an offset table");
                 readCompressedFiledata(reader, key);
             }
-
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -141,6 +143,7 @@ public class FileDataEntry implements IReadable, IByteSerializable {
         // Build the offset table
         for (int i = 0; i < sectorsInFile + 1; i++) {
             sectorOffsetTable[i] = reader.readInt();
+            originalOffsetTable[i] = sectorOffsetTable[i];
         }
 
         if (blockTableEntry.isEncrypted()) {
@@ -215,6 +218,7 @@ public class FileDataEntry implements IReadable, IByteSerializable {
                 context.getLogger().debug("Reading a sector...");
                 sector.readRawData(sectorCount);
                 sector.addBytes(fileBytes);
+                context.getLogger().debug("Expanded to " + fileBytes.array().length + " bytes");
                 sectorCount++;
             }
             return fileBytes.array();
@@ -224,6 +228,7 @@ public class FileDataEntry implements IReadable, IByteSerializable {
                 // For some reason, coulnd't read completely... avoid infinite loop.
                 context.getErrorHandler().handleCriticalError("Could not " +
                         "complete file data entry for " + fileName);
+                return new byte[0];
             }
             return getFileBytes(fileName);
         }
@@ -325,6 +330,21 @@ public class FileDataEntry implements IReadable, IByteSerializable {
      */
     @Override
     public byte[] toBytes() {
-        return new byte[0];
+        ByteBuffer buffer = ByteBuffer.allocate(blockTableEntry.getBlockSize());
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+
+        for(int i = 0; i < originalOffsetTable.length; i++) {
+            buffer.putInt(originalOffsetTable[i]);
+        }
+
+        for(int i = 0; i < newSectors.size(); i++) {
+            FileSectorEntry sector = newSectors.get(i);
+            if(!sector.isRead()) {
+                sector.readRawData(i);
+            }
+            buffer.put(sector.toBytes());
+        }
+
+        return buffer.array();
     }
 }

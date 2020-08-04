@@ -87,4 +87,21 @@ public interface IMpq {
      */
     void save(File destination);
 
+    /**
+     * Imports this file into the archive.
+     * Replaces if the file already exists.
+     *
+     * @param name  File name to import
+     * @param data  File bytes
+     */
+    void importFile(String name, byte[] data);
+
+    /**
+     * Deletes a file from the archive.
+     *
+     * @param name  Filename to delete
+     * @return true if deleted; false if not.
+     *         returns false if the file didn't exist
+     */
+    boolean delete(String name);
 }

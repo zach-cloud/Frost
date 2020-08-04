@@ -1,20 +1,24 @@
 package model;
 
 import interfaces.IByteSerializable;
+import storm.StormConstants;
 import storm.StormSecurity;
 import settings.MpqContext;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 
+import static storm.StormConstants.BYTES_PER_HASH_TABLE_ENTRY;
 import static storm.StormConstants.HASH_TABLE_ENCRYPTION_KEY;
 import static helper.ByteHelper.*;
 
 public class HashTable implements IByteSerializable {
 
-    private static final int HASH_TABLE_ENTRY_SIZE = 16; // 16 bytes = 4 * int32
     private List<HashTableEntry> entries;
 
+    private StormSecurity security;
     private MpqContext context;
 
     /**
@@ -26,21 +30,22 @@ public class HashTable implements IByteSerializable {
     public HashTable(StormSecurity stormSecurity, EncryptedHashTable encryptedHashTable, MpqContext context) {
         entries = new ArrayList<>();
         this.context = context;
+        this.security = stormSecurity;
         byte[] encryptedData = encryptedHashTable.getEncryptedData();
         context.getLogger().debug("Attempting to decrypt hash table... key=" + HASH_TABLE_ENCRYPTION_KEY);
         byte[] decryptedData = stormSecurity.decryptBytes(encryptedData, HASH_TABLE_ENCRYPTION_KEY);
         context.getLogger().debug("Decrypted bytes into: " + decryptedData.length);
-        if(decryptedData.length % HASH_TABLE_ENTRY_SIZE != 0) {
+        if(decryptedData.length % BYTES_PER_HASH_TABLE_ENTRY != 0) {
             context.getErrorHandler().handleCriticalError("Could not convert decrypted bytes " +
                     "into table entries (size = " + decryptedData.length + ")");
         }
 
-        for(int i = 0 ; i < decryptedData.length / HASH_TABLE_ENTRY_SIZE; i++) {
-            byte[] filePathHashA = extractBytes(decryptedData, i * HASH_TABLE_ENTRY_SIZE, 4);
-            byte[] filePathHashB = extractBytes(decryptedData, 4 + (i * HASH_TABLE_ENTRY_SIZE), 4);
-            byte[] language = extractBytes(decryptedData, 8 + (i * HASH_TABLE_ENTRY_SIZE), 2);
-            byte[] platform = extractBytes(decryptedData, 10 + (i * HASH_TABLE_ENTRY_SIZE), 2);
-            byte[] fileBlockIndex = extractBytes(decryptedData, 12 + (i * HASH_TABLE_ENTRY_SIZE), 4);
+        for(int i = 0 ; i < decryptedData.length / BYTES_PER_HASH_TABLE_ENTRY; i++) {
+            byte[] filePathHashA = extractBytes(decryptedData, i * BYTES_PER_HASH_TABLE_ENTRY, 4);
+            byte[] filePathHashB = extractBytes(decryptedData, 4 + (i * BYTES_PER_HASH_TABLE_ENTRY), 4);
+            byte[] language = extractBytes(decryptedData, 8 + (i * BYTES_PER_HASH_TABLE_ENTRY), 2);
+            byte[] platform = extractBytes(decryptedData, 10 + (i * BYTES_PER_HASH_TABLE_ENTRY), 2);
+            byte[] fileBlockIndex = extractBytes(decryptedData, 12 + (i * BYTES_PER_HASH_TABLE_ENTRY), 4);
             HashTableEntry entry = new HashTableEntry(byteToInt(filePathHashA), byteToInt(filePathHashB),
                     byteToShort(language), byteToShort(platform), byteToInt(fileBlockIndex), context);
             entry.setCallbackId(i);
@@ -57,7 +62,16 @@ public class HashTable implements IByteSerializable {
      */
     @Override
     public byte[] toBytes() {
-        return new byte[0];
+        ByteBuffer buffer = ByteBuffer.allocate(entries.size() * BYTES_PER_HASH_TABLE_ENTRY);
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+
+        for(HashTableEntry entry : entries) {
+            buffer.put(entry.toBytes());
+        }
+
+        EncryptedHashTable encryptedHashTable = new EncryptedHashTable(entries.size(), context);
+        encryptedHashTable.encrypt(buffer.array(),security);
+        return encryptedHashTable.toBytes();
     }
 
     public List<HashTableEntry> getEntries() {
@@ -74,10 +88,6 @@ public class HashTable implements IByteSerializable {
 
     public HashTableEntry get(int initialEntry) {
         return entries.get(initialEntry);
-    }
-
-    public static int getHashTableEntrySize() {
-        return HASH_TABLE_ENTRY_SIZE;
     }
 
     public MpqContext getContext() {

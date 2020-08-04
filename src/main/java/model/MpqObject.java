@@ -16,6 +16,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import static storm.StormConstants.MPQ_HASH_NAME_A;
+import static storm.StormConstants.MPQ_HASH_NAME_B;
+
 public class MpqObject implements IReadable, IByteSerializable {
 
     private StormUtility stormUtility;
@@ -89,6 +92,7 @@ public class MpqObject implements IReadable, IByteSerializable {
                     + hashTableStart + ",extendedBlockTableOffset=" + extendedBlockTableOffset
                     + ",hashTableOffsetHigh=" + hashTableOffsetHigh + ",blockTableOffsetHigh="
                     + blockTableOffsetHigh);
+            context.getLogger().debug("Header: " + archiveHeader.toString());
 
             reader.setPosition(0);
             preHeader = reader.readBytes(headerStart);
@@ -332,6 +336,78 @@ public class MpqObject implements IReadable, IByteSerializable {
         for(String entry : listfile.getEntries()) {
             extractFile(entry);
         }
+    }
+
+    /**
+     * Imports this file into the archive.
+     * Replaces if the file already exists.
+     *
+     * @param name  File name to import
+     * @param data  File bytes
+     */
+    public void importFile(String name, byte[] data) {
+        // First, delete file if it exists.
+        delete(name);
+        // See if we have empty space to add this file in.
+        HashTableEntry blankHashtableEntry = findAvailableHashtableEntry();
+        if(blankHashtableEntry == null) {
+            context.getErrorHandler().handleCriticalError("Not written yet (reallocate hashtable)");
+        }
+        // We're going to push the block table and hash table further in the archive so we have room
+        // for this new file we're about to add.
+        int newFilePos = -1;
+        if(archiveHeader.getBlockTableOffset() > archiveHeader.getHashTableOffset()) {
+            newFilePos = archiveHeader.getHashTableOffset();
+        } else {
+            newFilePos = archiveHeader.getBlockTableOffset();
+        }
+        this.archiveHeader.setHashTableOffset(archiveHeader.getHashTableOffset() + data.length + 1);
+        this.archiveHeader.setBlockTableOffset(archiveHeader.getBlockTableOffset() + data.length + 1);
+
+        // Create a new block table entry for this file.
+        BlockTableEntry blockTableEntry = new BlockTableEntry(newFilePos, data.length,
+                data.length, 0x80000000 & 0x01000000, context);
+        // Set up our new hash table entry
+        // We don't need to add it, since it already existed. It was just blank before.
+        int blockTableIndex = blockTable.addEntry(blockTableEntry);
+        int hashA = stormSecurity.hashAsInt(name, MPQ_HASH_NAME_A);
+        int hashB = stormSecurity.hashAsInt(name, MPQ_HASH_NAME_B);
+        blankHashtableEntry.setContext(context);
+        blankHashtableEntry.setFileBlockIndex(blockTableIndex);
+        blankHashtableEntry.setFilePathHashA(hashA);
+        blankHashtableEntry.setFilePathHashB(hashB);
+        blankHashtableEntry.setLanguage((short)0);
+        blankHashtableEntry.setLanguage((short)0);
+        // Now we'll set up our new File Data Entry
+
+    }
+
+    public HashTableEntry findAvailableHashtableEntry() {
+        for(HashTableEntry entry : hashTable.getEntries()) {
+            if(entry.getFileBlockIndex() == StormConstants.MPQ_HASH_ENTRY_DELETED ||
+                    entry.getFileBlockIndex() == StormConstants.MPQ_HASH_ENTRY_EMPTY) {
+                context.getLogger().debug("Found an available hashtable entry!");
+                return entry;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Deletes a file from the archive.
+     *
+     * @param name  Filename to delete
+     * @return true if deleted; false if not.
+     *         returns false if the file didn't exist
+     */
+    public boolean delete(String name) {
+        if(!fileExists(name)) {
+            context.getLogger().info("File did not exist in mpq: " + name);
+            return false;
+        }
+        context.getLogger().info("Deleting file from archive: " + name);
+        // TODO: Delete it.
+        return true;
     }
 
     /**

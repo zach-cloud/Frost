@@ -166,6 +166,7 @@ public class Mpq implements IMpq, IByteSerializable {
         try {
             context.getFileWriter().write(toBytes(), destination);
         } catch (Exception ex) {
+            ex.printStackTrace();
             context.getErrorHandler().handleCriticalError("Could not save file: " + ex.getMessage());
         }
     }
@@ -287,6 +288,28 @@ public class Mpq implements IMpq, IByteSerializable {
      */
     public int getUnknownFileCount() {
         return mpqObject.getUnknownFileCount();
+    }
+
+    /**
+     * Imports this file into the archive.
+     * Replaces if the file already exists.
+     *
+     * @param name  File name to import
+     * @param data  File bytes
+     */
+    public void importFile(String name, byte[] data) {
+        mpqObject.importFile(name, data);
+    }
+
+    /**
+     * Deletes a file from the archive.
+     *
+     * @param name  Filename to delete
+     * @return true if deleted; false if not.
+     *         returns false if the file didn't exist
+     */
+    public boolean delete(String name) {
+        return mpqObject.delete(name);
     }
 
     public File getOrigin() {

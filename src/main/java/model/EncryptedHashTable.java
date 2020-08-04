@@ -1,5 +1,6 @@
 package model;
 
+import helper.ByteHelper;
 import interfaces.IReadable;
 import interfaces.IByteSerializable;
 import reader.BinaryReader;
@@ -8,12 +9,9 @@ import storm.StormSecurity;
 
 import java.io.IOException;
 
-import static storm.StormConstants.BLOCK_TABLE_ENCRYPTION_KEY;
-import static storm.StormConstants.HASH_TABLE_ENCRYPTION_KEY;
+import static storm.StormConstants.*;
 
 public class EncryptedHashTable implements IReadable, IByteSerializable {
-
-    private static final int BYTES_PER_BLOCK_TABLE_ENTRY = 16;
 
     private byte[] encryptedData;
 
@@ -38,12 +36,16 @@ public class EncryptedHashTable implements IReadable, IByteSerializable {
     @Override
     public void read(BinaryReader reader) {
         try {
-            int size = entryCount * BYTES_PER_BLOCK_TABLE_ENTRY;
+            int size = entryCount * BYTES_PER_HASH_TABLE_ENTRY;
             encryptedData = reader.readBytes(size);
             context.getLogger().debug("Read " + size + " bytes as encrypted hash table");
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+    }
+
+    public String toString() {
+        return ByteHelper.bytesToString(encryptedData);
     }
 
     /**

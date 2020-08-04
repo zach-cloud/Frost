@@ -1,5 +1,6 @@
 package model;
 
+import helper.ByteHelper;
 import interfaces.IReadable;
 import interfaces.IByteSerializable;
 import reader.BinaryReader;
@@ -56,6 +57,10 @@ public class EncryptedBlockTable implements IReadable, IByteSerializable {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+    }
+
+    public String toString() {
+        return ByteHelper.bytesToString(encryptedData);
     }
 
     public void setEncryptedData(byte[] encryptedData) {

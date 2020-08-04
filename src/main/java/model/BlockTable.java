@@ -67,6 +67,11 @@ public class BlockTable implements IByteSerializable {
         return encryptedBlockTable.toBytes();
     }
 
+    public int addEntry(BlockTableEntry blockTableEntry) {
+        entries.add(blockTableEntry);
+        return entries.size();
+    }
+
     public BlockTableEntry get(int index) {
         return entries.get(index);
     }
@@ -86,4 +91,6 @@ public class BlockTable implements IByteSerializable {
     public void setContext(MpqContext context) {
         this.context = context;
     }
+
+
 }

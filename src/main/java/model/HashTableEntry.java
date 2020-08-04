@@ -2,6 +2,10 @@ package model;
 
 import interfaces.IByteSerializable;
 import settings.MpqContext;
+import storm.StormConstants;
+
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 public class HashTableEntry implements IByteSerializable {
 
@@ -37,7 +41,16 @@ public class HashTableEntry implements IByteSerializable {
      */
     @Override
     public byte[] toBytes() {
-        return new byte[0];
+        ByteBuffer buffer = ByteBuffer.allocate(StormConstants.BYTES_PER_HASH_TABLE_ENTRY);
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+
+        buffer.putInt(filePathHashA);
+        buffer.putInt(filePathHashB);
+        buffer.putShort(language);
+        buffer.putShort(platform);
+        buffer.putInt(fileBlockIndex);
+
+        return buffer.array();
     }
 
     public int getFilePathHashA() {

@@ -1,6 +1,7 @@
 package model;
 
 import compression.CompressionHandler;
+import interfaces.IByteSerializable;
 import storm.StormSecurity;
 import helper.ByteHelper;
 import reader.BinaryReader;
@@ -9,7 +10,7 @@ import settings.MpqContext;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public class FileSectorEntry {
+public class FileSectorEntry implements IByteSerializable {
 
     private int start; // Start byte, offset by the start of file data entry
     private int end; // End byte, offset by the start of file data entry
@@ -19,6 +20,7 @@ public class FileSectorEntry {
     private int key; // Key, if known; else -1
     private boolean compressed; // True if compressed, false if not.
     private boolean encrypted; // True if encrypted, false if not
+    private int sectorCount = -1;
     private byte[] rawData; // Stores raw bytes of sector, can be compressed
     private byte[] fileData; // Stores decompressed/decrypted data. Essentially a cache for multiple extractions.
 
@@ -76,6 +78,7 @@ public class FileSectorEntry {
             if(encrypted) {
                 context.getLogger().debug("Decrypting file data with key=" + key+sectorCount);
                 rawData = stormSecurity.decryptBytes(rawData, key + sectorCount);
+                this.sectorCount = sectorCount;
             }
             if(rawData.length != compressedSize) {
                 context.getErrorHandler().handleError("Compressed size check failed ("
@@ -105,6 +108,25 @@ public class FileSectorEntry {
             }
             fileBytes.put(fileData);
             isProcessed = true;
+        }
+    }
+
+    /**
+     * Converts this object into a byte array which represents
+     * the same state as the object.
+     *
+     * @return  Byte array of object.
+     */
+    @Override
+    public byte[] toBytes() {
+        if(!isRead){
+            context.getErrorHandler().handleCriticalError
+                    ("Attempted to add bytes before reading them");
+        }
+        if(encrypted) {
+            return stormSecurity.encryptBytes(rawData, key + sectorCount);
+        } else {
+            return rawData;
         }
     }
 

@@ -115,4 +115,15 @@ public class ByteHelper {
         }
         return newBytes;
     }
+
+    public static String bytesToString(byte[] byteArray) {
+        StringBuilder builder = new StringBuilder();
+        for(byte b: byteArray) {
+            builder.append(b).append(",");
+        }
+        if(builder.length() > 0) {
+            builder.setLength(builder.length() - 1);
+        }
+        return builder.toString();
+    }
 }
