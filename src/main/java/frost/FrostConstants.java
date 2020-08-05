@@ -1,6 +1,6 @@
-package storm;
+package frost;
 
-public interface StormConstants {
+public interface FrostConstants {
 
     /** Computed by taking the hashAsInt("(block table)", 3) */
     int BLOCK_TABLE_ENCRYPTION_KEY = -326913117;
@@ -20,7 +20,7 @@ public interface StormConstants {
     int BYTES_PER_BLOCK_TABLE_ENTRY = 16;
     int BYTES_PER_HASH_TABLE_ENTRY = 16;
 
-    /** FrozenMPQ external constants */
+    /** Frost external constants */
     short ANY_PLATFORM = -2;
     short ANY_LANGUAGE = -2;
 }

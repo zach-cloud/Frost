@@ -1,6 +1,6 @@
 package stepDefs;
 
-import storm.StormSecurity;
+import frost.FrostSecurity;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -14,7 +14,7 @@ import static utils.ByteUtils.stringToBytes;
 
 public class StormCryptStepDefs {
 
-    private StormSecurity stormSecurity;
+    private FrostSecurity frostSecurity;
     private byte[] input;
     private ByteBuffer inputByteBuffer;
     private byte[] result;
@@ -30,16 +30,16 @@ public class StormCryptStepDefs {
 
     @When("bytes are decrypted with key {int}")
     public void bytes_are_decrypted_with_key(int key) {
-        this.stormSecurity = new StormSecurity();
-        result = stormSecurity.decryptBytes(input, key);
-        resultByteBuffer = stormSecurity.decryptBuffer(inputByteBuffer, key);
+        this.frostSecurity = new FrostSecurity();
+        result = frostSecurity.decryptBytes(input, key);
+        resultByteBuffer = frostSecurity.decryptBuffer(inputByteBuffer, key);
     }
 
     @When("bytes are encrypted with key {int}")
     public void bytes_are_encrypted_with_key(int key) {
-        this.stormSecurity = new StormSecurity();
-        result = stormSecurity.encryptBytes(input, key);
-        resultByteBuffer = stormSecurity.encryptBuffer(inputByteBuffer, key);
+        this.frostSecurity = new FrostSecurity();
+        result = frostSecurity.encryptBytes(input, key);
+        resultByteBuffer = frostSecurity.encryptBuffer(inputByteBuffer, key);
     }
 
     @Then("result bytes should be:")
@@ -58,8 +58,8 @@ public class StormCryptStepDefs {
 
     @When("integer hash is computed with type {int}")
     public void integer_hash_is_computed(int type) {
-        this.stormSecurity = new StormSecurity();
-        intHash = stormSecurity.hashAsInt(toHash, type);
+        this.frostSecurity = new FrostSecurity();
+        intHash = frostSecurity.hashAsInt(toHash, type);
     }
 
     @Then("hash should be {int}")

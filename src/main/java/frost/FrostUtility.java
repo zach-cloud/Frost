@@ -1,18 +1,18 @@
-package storm;
+package frost;
 
 import model.HashTable;
 import model.HashTableEntry;
 import settings.MpqContext;
 
-import static storm.StormConstants.*;
+import static frost.FrostConstants.*;
 
-public class StormUtility {
+public class FrostUtility {
 
-    private StormSecurity stormSecurity;
+    private FrostSecurity frostSecurity;
     private MpqContext context;
 
-    public StormUtility(StormSecurity stormSecurity, MpqContext context) {
-        this.stormSecurity = stormSecurity;
+    public FrostUtility(FrostSecurity frostSecurity, MpqContext context) {
+        this.frostSecurity = frostSecurity;
         this.context = context;
     }
 
@@ -28,22 +28,22 @@ public class StormUtility {
     public HashTableEntry findEntry(HashTable hashTable, String fileName, short lang, short platform) {
         try {
             // Find entry in hash table for file
-            long initialEntry = stormSecurity.hashAsInt(fileName, MPQ_HASH_TABLE_OFFSET) & (hashTable.size() - 1);
+            long initialEntry = frostSecurity.hashAsInt(fileName, MPQ_HASH_TABLE_OFFSET) & (hashTable.size() - 1);
 
             // Is there anything there?
             HashTableEntry entry = hashTable.get((int) initialEntry);
-            if (entry.getFileBlockIndex() == StormConstants.MPQ_HASH_ENTRY_EMPTY) {
+            if (entry.getFileBlockIndex() == FrostConstants.MPQ_HASH_ENTRY_EMPTY) {
                 return null;
             }
 
             // Calculate hashes and find entry
-            int hashA = stormSecurity.hashAsInt(fileName, MPQ_HASH_NAME_A);
-            int hashB = stormSecurity.hashAsInt(fileName, MPQ_HASH_NAME_B);
+            int hashA = frostSecurity.hashAsInt(fileName, MPQ_HASH_NAME_A);
+            int hashB = frostSecurity.hashAsInt(fileName, MPQ_HASH_NAME_B);
             HashTableEntry currentEntry;
             int currentIndex = (int) initialEntry;
             while (currentIndex < hashTable.size()) {
                 currentEntry = hashTable.get(currentIndex);
-                if (currentEntry.getFileBlockIndex() != StormConstants.MPQ_HASH_ENTRY_DELETED) {
+                if (currentEntry.getFileBlockIndex() != FrostConstants.MPQ_HASH_ENTRY_DELETED) {
                     if (currentEntry.getFilePathHashA() == hashA && currentEntry.getFilePathHashB() == hashB) {
                         if (currentEntry.getPlatform() == platform || platform == ANY_PLATFORM) {
                             if (currentEntry.getLanguage() == lang || lang == ANY_LANGUAGE) {

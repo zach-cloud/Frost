@@ -2,7 +2,7 @@ package model;
 
 import compression.CompressionHandler;
 import interfaces.IByteSerializable;
-import storm.StormSecurity;
+import frost.FrostSecurity;
 import helper.ByteHelper;
 import reader.BinaryReader;
 import settings.MpqContext;
@@ -31,7 +31,7 @@ public class FileSectorEntry implements IByteSerializable {
     private boolean isProcessed; // Set to true when we finish decompressing/decrypting/etc.
 
     private MpqContext context;
-    private StormSecurity stormSecurity;
+    private FrostSecurity frostSecurity;
 
     /**
      * Creates a new Sector entry containing data from a file sector
@@ -44,11 +44,11 @@ public class FileSectorEntry implements IByteSerializable {
      * @param compressed    True if compressed, false if not.
      * @param encrypted True if encrypted, false if not
      * @param reader    File reader linked to mpq file
-     * @param context   Mpq context
+     * @param context   FrostMpq context
      */
     public FileSectorEntry(int start, int end, int offset, int compressedSize,
                            int realSize, boolean compressed, boolean encrypted, int key,
-                           BinaryReader reader, MpqContext context, StormSecurity stormSecurity) {
+                           BinaryReader reader, MpqContext context, FrostSecurity frostSecurity) {
         this.start = start;
         this.end = end;
         this.offset = offset;
@@ -60,7 +60,7 @@ public class FileSectorEntry implements IByteSerializable {
         this.encrypted = encrypted;
         this.key = key;
         this.compressionHandler = new CompressionHandler(context);
-        this.stormSecurity = stormSecurity;
+        this.frostSecurity = frostSecurity;
     }
 
     /**
@@ -77,7 +77,7 @@ public class FileSectorEntry implements IByteSerializable {
             rawData = reader.readBytes((end+offset) - (start+offset));
             if(encrypted) {
                 context.getLogger().debug("Decrypting file data with key=" + key+sectorCount);
-                rawData = stormSecurity.decryptBytes(rawData, key + sectorCount);
+                rawData = frostSecurity.decryptBytes(rawData, key + sectorCount);
                 this.sectorCount = sectorCount;
             }
             if(rawData.length != compressedSize) {
@@ -124,10 +124,15 @@ public class FileSectorEntry implements IByteSerializable {
                     ("Attempted to add bytes before reading them");
         }
         if(encrypted) {
-            return stormSecurity.encryptBytes(rawData, key + sectorCount);
+            return frostSecurity.encryptBytes(rawData, key + sectorCount);
         } else {
             return rawData;
         }
+    }
+
+    public void setSingleSectorData(byte[] data) {
+        this.rawData = data;
+        this.fileData = data;
     }
 
     public int getStart() {
@@ -250,11 +255,12 @@ public class FileSectorEntry implements IByteSerializable {
         this.context = context;
     }
 
-    public StormSecurity getStormSecurity() {
-        return stormSecurity;
+    public FrostSecurity getFrostSecurity() {
+        return frostSecurity;
     }
 
-    public void setStormSecurity(StormSecurity stormSecurity) {
-        this.stormSecurity = stormSecurity;
+    public void setFrostSecurity(FrostSecurity frostSecurity) {
+        this.frostSecurity = frostSecurity;
     }
+
 }

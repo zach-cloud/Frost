@@ -6,7 +6,7 @@ import settings.MpqContext;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import static storm.StormConstants.BYTES_PER_BLOCK_TABLE_ENTRY;
+import static frost.FrostConstants.BYTES_PER_BLOCK_TABLE_ENTRY;
 
 /**
  * Represents a single entry in the Block Table.

@@ -1,6 +1,6 @@
-package mpq;
+package frost;
 
-import interfaces.IMpq;
+import interfaces.IFrostMpq;
 import interfaces.IByteSerializable;
 import model.MpqObject;
 import reader.BinaryReader;
@@ -18,7 +18,7 @@ import java.util.Set;
 /**
  * Represents an MPQ archive that can be read, extracted, and modified.
  */
-public class Mpq implements IMpq, IByteSerializable {
+public class FrostMpq implements IFrostMpq, IByteSerializable {
 
     /**
      * File that is an MPQ archive.
@@ -36,12 +36,12 @@ public class Mpq implements IMpq, IByteSerializable {
     private MpqContext context;
 
     /**
-     * Creates a Mpq with the specified file
+     * Creates a FrostMpq with the specified file
      * Default logger/settings
      *
      * @param origin MPQ file
      */
-    public Mpq(File origin) {
+    public FrostMpq(File origin) {
         this(origin, new MpqLogger(), new MpqSettings());
     }
 
@@ -51,18 +51,18 @@ public class Mpq implements IMpq, IByteSerializable {
      *
      * @param origin File name of MPQ file
      */
-    public Mpq(String origin) {
+    public FrostMpq(String origin) {
         this(new File(origin));
     }
 
     /**
-     * Creates a Mpq with the specified file
+     * Creates a FrostMpq with the specified file
      * Default settings
      *
      * @param origin MPQ file
      * @param logger MPQ Logger
      */
-    public Mpq(File origin, MpqLogger logger) {
+    public FrostMpq(File origin, MpqLogger logger) {
         this(origin, logger, new MpqSettings());
     }
 
@@ -73,18 +73,18 @@ public class Mpq implements IMpq, IByteSerializable {
      * @param origin File name of MPQ file
      * @param logger MPQ Logger
      */
-    public Mpq(String origin, MpqLogger logger) {
+    public FrostMpq(String origin, MpqLogger logger) {
         this(new File(origin), logger);
     }
 
     /**
-     * Creates a Mpq with the specified file
+     * Creates a FrostMpq with the specified file
      * Default logger
      *
      * @param origin   MPQ file
      * @param settings MPQ Settings
      */
-    public Mpq(File origin, MpqSettings settings) {
+    public FrostMpq(File origin, MpqSettings settings) {
         this(origin, new MpqLogger(settings), settings);
     }
 
@@ -95,7 +95,7 @@ public class Mpq implements IMpq, IByteSerializable {
      * @param origin   File name of MPQ file
      * @param settings MPQ Settings
      */
-    public Mpq(String origin, MpqSettings settings) {
+    public FrostMpq(String origin, MpqSettings settings) {
         this(new File(origin), settings);
     }
 
@@ -105,7 +105,7 @@ public class Mpq implements IMpq, IByteSerializable {
      * @param origin    Origin file
      * @param context   MPQ context
      */
-    public Mpq(File origin, MpqContext context) {
+    public FrostMpq(File origin, MpqContext context) {
         this.origin = origin;
         this.context = context;
         verifySourceFileExists();
@@ -113,13 +113,13 @@ public class Mpq implements IMpq, IByteSerializable {
     }
 
     /**
-     * Creates a Mpq with the specified file
+     * Creates a FrostMpq with the specified file
      *
      * @param origin   MPQ file
      * @param logger   MPQ Logger
      * @param settings MPQ Settings
      */
-    public Mpq(File origin, MpqLogger logger, MpqSettings settings) {
+    public FrostMpq(File origin, MpqLogger logger, MpqSettings settings) {
         this(origin, new MpqContext(logger, settings));
     }
 
@@ -130,7 +130,7 @@ public class Mpq implements IMpq, IByteSerializable {
      * @param logger   MPQ Logger
      * @param settings MPQ Settings
      */
-    public Mpq(String origin, MpqLogger logger, MpqSettings settings) {
+    public FrostMpq(String origin, MpqLogger logger, MpqSettings settings) {
         this(new File(origin), logger, settings);
     }
 

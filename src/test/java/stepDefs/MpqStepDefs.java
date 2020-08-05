@@ -1,21 +1,18 @@
 package stepDefs;
 
-import interfaces.IMpq;
+import frost.FrostMpq;
+import interfaces.IFrostMpq;
 import io.FileWriter;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import mpq.Mpq;
 import org.junit.Assert;
 import org.mockito.Mockito;
-import org.mockito.internal.progress.ArgumentMatcherStorage;
 import settings.MpqContext;
 import settings.MpqSettings;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
-import java.util.Scanner;
 import java.util.Set;
 
 import static org.mockito.Matchers.any;
@@ -23,7 +20,7 @@ import static org.mockito.Matchers.any;
 public class MpqStepDefs {
 
     private File mpqFile;
-    private IMpq mpq;
+    private IFrostMpq mpq;
     private MpqContext context;
     private FileWriter mockFileWriter;
     private Set<String> fileNames;
@@ -39,7 +36,7 @@ public class MpqStepDefs {
         this.context = new MpqContext();
         this.context.setSettings(new MpqSettings(MpqSettings.LogSettings.NONE,
                 MpqSettings.MpqOpenSettings.ANY));
-        this.mpq = new Mpq(mpqFile, context);
+        this.mpq = new FrostMpq(mpqFile, context);
     }
 
     private void makeMockFileWriter() {

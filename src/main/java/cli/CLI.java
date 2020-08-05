@@ -1,12 +1,11 @@
 package cli;
 
-import mpq.Mpq;
+import frost.FrostMpq;
 import org.apache.commons.io.FileUtils;
 import settings.GlobalSettings;
 import settings.MpqSettings;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.util.Scanner;
 import java.util.Set;
 
@@ -18,7 +17,6 @@ public class CLI {
         Scanner scanner = new Scanner(System.in);
         System.out.println("------------------");
         System.out.println("Frost v " + GlobalSettings.VERSION);
-        System.out.println();
         System.out.println(GlobalSettings.GITHUB_LINK);
         System.out.println("------------------");
         System.out.print("Enter filename: ");
@@ -28,74 +26,75 @@ public class CLI {
         }
         MpqSettings settings = new MpqSettings(MpqSettings.LogSettings.DEBUG, MpqSettings.MpqOpenSettings.CRITICAL);
 
-        Mpq mpq = new Mpq(inFile, settings);
-        System.out.print("Enter action type (extract/list/extractAllKnown/count/countKnown/save/quit/import): ");
-
-        String actionType = scanner.nextLine();
-        executeAction(scanner, mpq, actionType);
-    }
-
-    private void executeAction(Scanner scanner, Mpq mpq, String actionType) {
-        while(true) {
-            if (actionType.equalsIgnoreCase("extract")) {
-                extract(scanner, mpq);
-            } else if (actionType.equalsIgnoreCase("list")) {
-                list(scanner, mpq);
-            } else if (actionType.equalsIgnoreCase("extractAllKnown")) {
-                extractAllKnown(scanner, mpq);
-            } else if (actionType.equalsIgnoreCase("count")) {
-                System.out.println("Total files: " + mpq.getFileCount());
-            } else if (actionType.equalsIgnoreCase("countKnown")) {
-                System.out.println("Known files: " + mpq.getFileCount());
-            } else if (actionType.equalsIgnoreCase("save")) {
-                mpq.save(new File("saved.w3x"));
-                System.out.println("File saved successfully");
-            } else if(actionType.equalsIgnoreCase("import")) {
-                runImport(scanner, mpq);
-            } else if (actionType.equalsIgnoreCase("quit")) {
-                System.exit(0);
-            }
+        FrostMpq frostMPQ = new FrostMpq(inFile, settings);
+        while (true) {
+            System.out.print("Enter action type (extract/list/extractAllKnown/count/countKnown/save/quit/import): ");
+            String actionType = scanner.nextLine();
+            executeAction(scanner, frostMPQ, actionType);
         }
     }
 
-    private void runImport(Scanner scanner, Mpq mpq) {
+    private void executeAction(Scanner scanner, FrostMpq frostMPQ, String actionType) {
+
+        if (actionType.equalsIgnoreCase("extract")) {
+            extract(scanner, frostMPQ);
+        } else if (actionType.equalsIgnoreCase("list")) {
+            list(scanner, frostMPQ);
+        } else if (actionType.equalsIgnoreCase("extractAllKnown")) {
+            extractAllKnown(scanner, frostMPQ);
+        } else if (actionType.equalsIgnoreCase("count")) {
+            System.out.println("Total files: " + frostMPQ.getFileCount());
+        } else if (actionType.equalsIgnoreCase("countKnown")) {
+            System.out.println("Known files: " + frostMPQ.getFileCount());
+        } else if (actionType.equalsIgnoreCase("save")) {
+            frostMPQ.save(new File("saved.w3x"));
+            System.out.println("File saved successfully");
+        } else if (actionType.equalsIgnoreCase("import")) {
+            runImport(scanner, frostMPQ);
+        } else if (actionType.equalsIgnoreCase("quit")) {
+            System.exit(0);
+        }
+    }
+
+
+    private void runImport(Scanner scanner, FrostMpq frostMPQ) {
         try {
             File inputFile = new File("");
             do {
                 System.out.print("Enter file to import: ");
                 inputFile = new File(scanner.nextLine());
             } while (!inputFile.exists());
-            mpq.importFile(inputFile.getName(), FileUtils.readFileToByteArray(inputFile));
+            frostMPQ.importFile(inputFile.getName(), FileUtils.readFileToByteArray(inputFile));
         } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
 
-    private void extractAllKnown(Scanner scanner, Mpq mpq) {
+    private void extractAllKnown(Scanner scanner, FrostMpq frostMPQ) {
         File listfilePath = getListfile(scanner);
-        if(listfilePath.exists()) {
-            mpq.extractAllKnown(listfilePath);
+        if (listfilePath.exists()) {
+            frostMPQ.extractAllKnown(listfilePath);
         } else {
-            mpq.extractAllKnown();
+            frostMPQ.extractAllKnown();
         }
     }
 
-    private void extract(Scanner scanner, Mpq mpq) {
+    private void extract(Scanner scanner, FrostMpq frostMPQ) {
         System.out.print("Enter filename to extract: ");
         String fileName = scanner.nextLine();
-        if (mpq.fileExists(fileName)) {
-            mpq.extractFile(fileName);
+        if (frostMPQ.fileExists(fileName)) {
+            frostMPQ.extractFile(fileName);
         } else {
             System.out.println("File does not exist.");
         }
     }
 
-    private void list(Scanner scanner, Mpq mpq) {
+    private void list(Scanner scanner, FrostMpq frostMPQ) {
         File listfilePath = getListfile(scanner);
-        if(listfilePath.exists()) {
-            mpq.addExternalListfile(listfilePath);
+        if (listfilePath.exists()) {
+            frostMPQ.addExternalListfile(listfilePath);
         }
-        Set<String> entries = mpq.getFileNames();
+        Set<String> entries = frostMPQ.getFileNames();
         System.out.println("-------");
         System.out.println("Files:");
         for (String entry : entries) {

@@ -1,4 +1,4 @@
-package storm;
+package frost;
 
 import exception.EncryptionException;
 import exception.HashingException;
@@ -8,22 +8,22 @@ import interfaces.IStormCrypt;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import static storm.StormConstants.MPQ_HASH_FILE_KEY;
-import static storm.StormConstants.MPQ_HASH_TABLE_OFFSET;
+import static frost.FrostConstants.MPQ_HASH_FILE_KEY;
+import static frost.FrostConstants.MPQ_HASH_TABLE_OFFSET;
 import static helper.ByteHelper.extractBytes;
 
 /**
  * MPQ Security
  * Based on provided C++ code.
  * <p>
- * Note that these storm/hashing algorithms are
+ * Note that these frost/hashing algorithms are
  * extremely insecure and should NEVER be used for any
  * sort of security use case.
  * <p>
  * This is intended to ONLY be used to interface with the
  * MPQ file format which uses these algorithms internally.
  */
-public class StormSecurity implements IStormCrypt {
+public class FrostSecurity implements IStormCrypt {
 
     private enum OperationType {
         ENCRYPT,
@@ -37,14 +37,14 @@ public class StormSecurity implements IStormCrypt {
     private long SEED_INITIAL_VALUE = 0x00100001;
     private int INITIAL_ENCRYPT_SEED = 0xEEEEEEEE;
 
-    /* StormSecurity table that is set on class startup. */
+    /* FrostSecurity table that is set on class startup. */
     private long[] encryptionTable;
 
     /**
-     * Creates a new StormSecurity with default parameters
+     * Creates a new FrostSecurity with default parameters
      * and little endian byteorder.
      */
-    public StormSecurity() {
+    public FrostSecurity() {
         this(ByteOrder.LITTLE_ENDIAN);
     }
 
@@ -54,14 +54,14 @@ public class StormSecurity implements IStormCrypt {
      *
      * @param byteOrder Byte order to use (little or big)
      */
-    public StormSecurity(ByteOrder byteOrder) {
+    public FrostSecurity(ByteOrder byteOrder) {
         this.encryptionTable = new long[ENCRYPTION_TABLE_SIZE];
         this.initializeEncryptionTable();
         this.byteOrder = byteOrder;
     }
 
     /**
-     * Saves numbers into the storm table for future use.
+     * Saves numbers into the frost table for future use.
      * See Storm documentation.
      */
     private void initializeEncryptionTable() {
@@ -144,7 +144,7 @@ public class StormSecurity implements IStormCrypt {
     }
 
     /**
-     * Encrypts the specified integer array using the Storm storm algorithm
+     * Encrypts the specified integer array using the Storm frost algorithm
      * If input array is null, returns null
      *
      * @param src Integer source array
@@ -273,7 +273,7 @@ public class StormSecurity implements IStormCrypt {
         } else if (operationType == OperationType.DECRYPT) {
             modified = decrypt(convertedNumericValues, key);
         } else {
-            throw new EncryptionException("Unknown storm type: " + operationType.name());
+            throw new EncryptionException("Unknown frost type: " + operationType.name());
         }
         // Cast back into byte array
         return ByteHelper.combineBytes(intArrayToBytes(modified), endBuffer);

@@ -1,8 +1,8 @@
 package model;
 
 
+import frost.FrostSecurity;
 import interfaces.IByteSerializable;
-import storm.StormSecurity;
 import settings.MpqContext;
 
 import java.nio.ByteBuffer;
@@ -10,28 +10,28 @@ import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 
-import static storm.StormConstants.BLOCK_TABLE_ENCRYPTION_KEY;
+import static frost.FrostConstants.BLOCK_TABLE_ENCRYPTION_KEY;
 import static helper.ByteHelper.*;
-import static storm.StormConstants.BYTES_PER_BLOCK_TABLE_ENTRY;
+import static frost.FrostConstants.BYTES_PER_BLOCK_TABLE_ENTRY;
 
 public class BlockTable implements IByteSerializable {
     private List<BlockTableEntry> entries;
-    private StormSecurity security;
+    private FrostSecurity security;
     private MpqContext context;
 
     /**
      * Decrypts provided block table and parses the entries.
      *
-     * @param stormSecurity            Encryption module with little endian order
+     * @param frostSecurity            Encryption module with little endian order
      * @param encryptedBlockTable   Encrypted block table (read from file)
      */
-    public BlockTable(StormSecurity stormSecurity, EncryptedBlockTable encryptedBlockTable, MpqContext context) {
+    public BlockTable(FrostSecurity frostSecurity, EncryptedBlockTable encryptedBlockTable, MpqContext context) {
         this.context = context;
-        this.security = stormSecurity;
+        this.security = frostSecurity;
         entries = new ArrayList<>();
         byte[] encryptedData = encryptedBlockTable.getEncryptedData();
         context.getLogger().debug("Attempting to decrypt block table... key=" + BLOCK_TABLE_ENCRYPTION_KEY);
-        byte[] decryptedData = stormSecurity.decryptBytes(encryptedData, BLOCK_TABLE_ENCRYPTION_KEY);
+        byte[] decryptedData = frostSecurity.decryptBytes(encryptedData, BLOCK_TABLE_ENCRYPTION_KEY);
         context.getLogger().debug("Decrypted bytes into: " + decryptedData.length);
         if(decryptedData.length % BYTES_PER_BLOCK_TABLE_ENTRY != 0) {
             context.getErrorHandler().handleCriticalError("Could not convert decrypted bytes " +

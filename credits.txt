@@ -1,5 +1,9 @@
 JCraft - for inflate/deflate Java code.
 
+Apache - for Commons library
+
+Cucumber & Mockito - test frameworks used
+
 Frotty & Contributors - for coding JMPQ3. Having an implementation to refer to was extremely helpful.
 For example, when struggling to read the header based on the Storm documentation, I looked
 at his implementation and saw that one of the values was actually a Short rather than a Byte...

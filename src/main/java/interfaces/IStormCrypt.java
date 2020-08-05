@@ -28,7 +28,7 @@ public interface IStormCrypt {
     byte[] decryptBytes(byte[] src, int key);
 
     /**
-     * Encrypts the specified integer array using the Storm storm algorithm
+     * Encrypts the specified integer array using the Storm frost algorithm
      * If input array is null, returns null
      *
      * @param src   Integer source array

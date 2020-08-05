@@ -1,13 +1,14 @@
 package model;
 
+import frost.FrostSecurity;
 import interfaces.IByteSerializable;
-import storm.StormConstants;
-import storm.StormSecurity;
+import frost.FrostConstants;
 import interfaces.IReadable;
 import reader.BinaryReader;
 import settings.MpqContext;
 
 import java.io.IOException;
+import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -20,7 +21,7 @@ public class FileDataEntry implements IReadable, IByteSerializable {
     private ArchiveHeader header;
     private BlockTableEntry blockTableEntry;
     private HashTableEntry hashTableEntry;
-    private StormSecurity stormSecurity;
+    private FrostSecurity frostSecurity;
 
     private boolean isComplete;
 
@@ -42,8 +43,8 @@ public class FileDataEntry implements IReadable, IByteSerializable {
      * @param blockTableEntry Associated block table entry
      * @param hashTableEntry  Associated hash table entry
      */
-    public FileDataEntry(int archiveOffset, StormSecurity stormSecurity, int initialPosition, ArchiveHeader header, BlockTableEntry blockTableEntry, HashTableEntry hashTableEntry, MpqContext context) {
-        this.stormSecurity = stormSecurity;
+    public FileDataEntry(int archiveOffset, FrostSecurity frostSecurity, int initialPosition, ArchiveHeader header, BlockTableEntry blockTableEntry, HashTableEntry hashTableEntry, MpqContext context) {
+        this.frostSecurity = frostSecurity;
         this.initialPosition = initialPosition;
         this.archiveOffset = archiveOffset;
         this.newSectors = new ArrayList<>();
@@ -52,6 +53,9 @@ public class FileDataEntry implements IReadable, IByteSerializable {
         this.hashTableEntry = hashTableEntry;
         this.context = context;
         sectorsInFile = blockTableEntry.getFileSize() / header.getSectorSize();
+        if(sectorsInFile < 0) {
+            context.getLogger().warn("Negative sector count: " + sectorsInFile);
+        }
         if (blockTableEntry.getFileSize() % header.getSectorSize() != 0) {
             // One sector holds remainder
             sectorsInFile++;
@@ -80,6 +84,18 @@ public class FileDataEntry implements IReadable, IByteSerializable {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+    }
+
+    public void setSingleSectorData(byte[] data) {
+        this.sectorsInFile = 0;
+        this.originalOffsetTable = new int[0];
+        this.sectorOffsetTable = new int[0]; // We do not need a sector offset table.
+        FileSectorEntry entry = new FileSectorEntry(0, data.length, blockTableEntry.getBlockOffset(),
+                data.length, data.length, false, false, -1,null,  context, frostSecurity);
+        entry.setSingleSectorData(data);
+        newSectors.add(entry);
+        isComplete = true;
+        entry.setRead(true);
     }
 
     /**
@@ -115,7 +131,7 @@ public class FileDataEntry implements IReadable, IByteSerializable {
                     archiveOffset + blockTableEntry.getBlockOffset(),
                     blockTableEntry.getFileSize(), blockTableEntry.getFileSize(),
                     false, blockTableEntry.isEncrypted(),
-                    key, reader, context, stormSecurity);
+                    key, reader, context, frostSecurity);
             newSectors.add(entry);
         }
         int fileEnd = currentPosition + remainingSize;
@@ -123,7 +139,7 @@ public class FileDataEntry implements IReadable, IByteSerializable {
                 archiveOffset + blockTableEntry.getBlockOffset(),
                 blockTableEntry.getFileSize(), blockTableEntry.getFileSize(),
                 false, blockTableEntry.isEncrypted(),
-                key, reader, context, stormSecurity);
+                key, reader, context, frostSecurity);
         newSectors.add(entry);
 
         isComplete = true;
@@ -147,7 +163,7 @@ public class FileDataEntry implements IReadable, IByteSerializable {
         }
 
         if (blockTableEntry.isEncrypted()) {
-            sectorOffsetTable = stormSecurity.decrypt(sectorOffsetTable, key - 1);
+            sectorOffsetTable = frostSecurity.decrypt(sectorOffsetTable, key - 1);
         }
 
         // Use the offset table to compute each sector position and size
@@ -177,7 +193,7 @@ public class FileDataEntry implements IReadable, IByteSerializable {
             FileSectorEntry entry = new FileSectorEntry(start, end,
                     archiveOffset + blockTableEntry.getBlockOffset(),
                     compressedSectorSize, realSectorSize, isActuallyCompressed, blockTableEntry.isEncrypted(),
-                    key, reader, context, stormSecurity);
+                    key, reader, context, frostSecurity);
             newSectors.add(entry);
         }
 
@@ -202,7 +218,7 @@ public class FileDataEntry implements IReadable, IByteSerializable {
             if (fileName.contains("\\")) {
                 fileName = fileName.substring(1 + fileName.lastIndexOf("\\"));
             }
-            key = stormSecurity.hashAsInt(fileName, StormConstants.MPQ_HASH_FILE_KEY);
+            key = frostSecurity.hashAsInt(fileName, FrostConstants.MPQ_HASH_FILE_KEY);
             context.getLogger().debug("Calculated key for fileName=" + fileName + " as " + key);
             if (blockTableEntry.isKeyAdjusted()) {
                 key = (key + blockTableEntry.getBlockOffset()) ^ blockTableEntry.getFileSize();
@@ -266,12 +282,12 @@ public class FileDataEntry implements IReadable, IByteSerializable {
         this.hashTableEntry = hashTableEntry;
     }
 
-    public StormSecurity getStormSecurity() {
-        return stormSecurity;
+    public FrostSecurity getFrostSecurity() {
+        return frostSecurity;
     }
 
-    public void setStormSecurity(StormSecurity stormSecurity) {
-        this.stormSecurity = stormSecurity;
+    public void setFrostSecurity(FrostSecurity frostSecurity) {
+        this.frostSecurity = frostSecurity;
     }
 
     public boolean isComplete() {
@@ -330,21 +346,47 @@ public class FileDataEntry implements IReadable, IByteSerializable {
      */
     @Override
     public byte[] toBytes() {
-        ByteBuffer buffer = ByteBuffer.allocate(blockTableEntry.getBlockSize());
-        buffer.order(ByteOrder.LITTLE_ENDIAN);
-
-        for(int i = 0; i < originalOffsetTable.length; i++) {
-            buffer.putInt(originalOffsetTable[i]);
-        }
-
-        for(int i = 0; i < newSectors.size(); i++) {
-            FileSectorEntry sector = newSectors.get(i);
-            if(!sector.isRead()) {
-                sector.readRawData(i);
+        try {
+            ByteBuffer buffer = ByteBuffer.allocate(blockTableEntry.getBlockSize());
+            context.getLogger().debug("Allocated " + blockTableEntry.getBlockSize() + " bytes");
+            if(blockTableEntry.getBlockSize() == 3008) {
+                System.out.println("Here");
             }
-            buffer.put(sector.toBytes());
-        }
+            buffer.order(ByteOrder.LITTLE_ENDIAN);
 
-        return buffer.array();
+            for (int i = 0; i < originalOffsetTable.length; i++) {
+                buffer.putInt(originalOffsetTable[i]);
+            }
+
+            for (int i = 0; i < newSectors.size(); i++) {
+                FileSectorEntry sector = newSectors.get(i);
+                if (!sector.isRead()) {
+                    sector.readRawData(i);
+                }
+                buffer.put(sector.toBytes());
+            }
+
+            return buffer.array();
+        } catch (BufferOverflowException ex) {
+            ex.printStackTrace();
+            context.getErrorHandler().handleCriticalError
+                    ("Ran out of space for file");
+            return new byte[0];
+        }
+    }
+
+    public int getByteSize() {
+        if(blockTableEntry.isSingleUnit()) {
+            return blockTableEntry.getBlockSize();
+        } else {
+            return blockTableEntry.getBlockSize() + (4 * (sectorsInFile+1));
+        }
+    }
+
+    public void setOffsetPosition(int newFileOffset) {
+        initialPosition = newFileOffset;
+        for(FileSectorEntry sector : newSectors) {
+            sector.setOffset(newFileOffset);
+        }
     }
 }

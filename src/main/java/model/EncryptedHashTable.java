@@ -1,15 +1,15 @@
 package model;
 
+import frost.FrostSecurity;
 import helper.ByteHelper;
 import interfaces.IReadable;
 import interfaces.IByteSerializable;
 import reader.BinaryReader;
 import settings.MpqContext;
-import storm.StormSecurity;
 
 import java.io.IOException;
 
-import static storm.StormConstants.*;
+import static frost.FrostConstants.*;
 
 public class EncryptedHashTable implements IReadable, IByteSerializable {
 
@@ -24,7 +24,7 @@ public class EncryptedHashTable implements IReadable, IByteSerializable {
         this.context = context;
     }
 
-    public void encrypt(byte[] array, StormSecurity security) {
+    public void encrypt(byte[] array, FrostSecurity security) {
         this.encryptedData = security.encryptBytes(array, HASH_TABLE_ENCRYPTION_KEY);
     }
 

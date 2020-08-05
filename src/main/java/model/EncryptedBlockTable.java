@@ -5,12 +5,12 @@ import interfaces.IReadable;
 import interfaces.IByteSerializable;
 import reader.BinaryReader;
 import settings.MpqContext;
-import storm.StormConstants;
-import storm.StormSecurity;
+import frost.FrostConstants;
+import frost.FrostSecurity;
 
 import java.io.IOException;
 
-import static storm.StormConstants.BLOCK_TABLE_ENCRYPTION_KEY;
+import static frost.FrostConstants.BLOCK_TABLE_ENCRYPTION_KEY;
 
 public class EncryptedBlockTable implements IReadable, IByteSerializable {
 
@@ -24,7 +24,7 @@ public class EncryptedBlockTable implements IReadable, IByteSerializable {
         this.context = context;
     }
 
-    public void encrypt(byte[] array, StormSecurity security) {
+    public void encrypt(byte[] array, FrostSecurity security) {
         this.encryptedData = security.encryptBytes(array, BLOCK_TABLE_ENCRYPTION_KEY);
     }
 
@@ -51,7 +51,7 @@ public class EncryptedBlockTable implements IReadable, IByteSerializable {
     @Override
     public void read(BinaryReader reader) {
         try {
-            int size = entryCount * StormConstants.BYTES_PER_BLOCK_TABLE_ENTRY;
+            int size = entryCount * FrostConstants.BYTES_PER_BLOCK_TABLE_ENTRY;
             encryptedData = reader.readBytes(size);
             context.getLogger().debug("Read " + size + " bytes as encrypted block table");
         } catch (IOException ex) {

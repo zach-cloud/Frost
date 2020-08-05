@@ -1,8 +1,7 @@
 package model;
 
+import frost.FrostSecurity;
 import interfaces.IByteSerializable;
-import storm.StormConstants;
-import storm.StormSecurity;
 import settings.MpqContext;
 
 import java.nio.ByteBuffer;
@@ -10,30 +9,30 @@ import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 
-import static storm.StormConstants.BYTES_PER_HASH_TABLE_ENTRY;
-import static storm.StormConstants.HASH_TABLE_ENCRYPTION_KEY;
+import static frost.FrostConstants.BYTES_PER_HASH_TABLE_ENTRY;
+import static frost.FrostConstants.HASH_TABLE_ENCRYPTION_KEY;
 import static helper.ByteHelper.*;
 
 public class HashTable implements IByteSerializable {
 
     private List<HashTableEntry> entries;
 
-    private StormSecurity security;
+    private FrostSecurity security;
     private MpqContext context;
 
     /**
      * Decrypts provided block table and parses the entries.
      *
-     * @param stormSecurity            Encryption module with little endian order
+     * @param frostSecurity            Encryption module with little endian order
      * @param encryptedHashTable    Encrypted hash table (read from file)
      */
-    public HashTable(StormSecurity stormSecurity, EncryptedHashTable encryptedHashTable, MpqContext context) {
+    public HashTable(FrostSecurity frostSecurity, EncryptedHashTable encryptedHashTable, MpqContext context) {
         entries = new ArrayList<>();
         this.context = context;
-        this.security = stormSecurity;
+        this.security = frostSecurity;
         byte[] encryptedData = encryptedHashTable.getEncryptedData();
         context.getLogger().debug("Attempting to decrypt hash table... key=" + HASH_TABLE_ENCRYPTION_KEY);
-        byte[] decryptedData = stormSecurity.decryptBytes(encryptedData, HASH_TABLE_ENCRYPTION_KEY);
+        byte[] decryptedData = frostSecurity.decryptBytes(encryptedData, HASH_TABLE_ENCRYPTION_KEY);
         context.getLogger().debug("Decrypted bytes into: " + decryptedData.length);
         if(decryptedData.length % BYTES_PER_HASH_TABLE_ENTRY != 0) {
             context.getErrorHandler().handleCriticalError("Could not convert decrypted bytes " +

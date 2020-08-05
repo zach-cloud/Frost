@@ -1,4 +1,4 @@
-# FrozenMPQ2
+# Frost
 
 !Under Construction!
 
@@ -19,13 +19,13 @@ FrozenMPQ2 is a multi-platform MPQ editing library written in pure Java. The MPQ
 
 2: Create an MPQ object from a file or String path:
 ```$xslt
-IMpq mpq = new Mpq(inFile);
+IMpq frostMPQ = new Mpq(inFile);
 ```
 
 3: Use the operations on the MPQ, for example:
 ```$xslt
-        if(mpq.fileExists(fileName)) {
-            mpq.extractFile(fileName);
+        if(frostMPQ.fileExists(fileName)) {
+            frostMPQ.extractFile(fileName);
         } else {
             System.out.println("File does not exist.");
         }

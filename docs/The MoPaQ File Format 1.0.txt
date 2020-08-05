@@ -76,7 +76,7 @@ The block table contains entries for each region in the archive. Regions may be 
 0Ch: int32 Flags : Bit mask of the flags for the block. The following values are conclusively identified:
 	80000000h: Block is a file, and follows the file data format; otherwise, block is free space or unused. If the block is not a file, all other flags should be cleared, and FileSize should be 0.
 	01000000h: File is stored as a single unit, rather than split into sectors.
-	00020000h: The file's stormSecurity key is adjusted by the block offset and file size (explained in detail in the File Data section). File must be encrypted.
+	00020000h: The file's frostSecurity key is adjusted by the block offset and file size (explained in detail in the File Data section). File must be encrypted.
 	00010000h: File is encrypted.
 	00000200h: File is compressed. File cannot be imploded.
 	00000100h: File is imploded. File cannot be compressed.
@@ -192,7 +192,7 @@ to be all binary 0s during signing/verification. This file is structured as foll
 08h: int512 Signature : The digital signature. Like all other numbers in the MoPaQ format, this is stored
 in little-endian order. The structure of this, when decrypted, follows the RSASSA-PKCS1-v1_5 specification;
 this format is rather icky to work with (I wrote a program to verify this signature using nothing but an MD5
-function and huge integer functions; it wasn't pleasant), and best left to an stormSecurity library such as Cryto++.
+function and huge integer functions; it wasn't pleasant), and best left to an frostSecurity library such as Cryto++.
 
 2.10 STRONG DIGITAL SIGNATURE
 The strong digital signature uses a simple proprietary implementation of RSA signing, using the SHA-1 hashing algorithm and a 2048-bit (strong) RSA key. The default public key and exponent are stored in Storm, but other keys may be used as well. The strong digital signature is stored immediately after the archive, in the containing file; the entire archive (ArchiveSize bytes, starting at ArchiveOffset in the containing file) is hashed as a single block. The signature has the following format:
@@ -214,7 +214,7 @@ Based on code from StormLib.
 
 unsigned long dwCryptTable[0x500];
 
-// The stormSecurity and hashing functions use a number table in their procedures. This table must be initialized before the functions are called the first time.
+// The frostSecurity and hashing functions use a number table in their procedures. This table must be initialized before the functions are called the first time.
 void InitializeCryptTable()
 {
     unsigned long seed   = 0x00100001;
