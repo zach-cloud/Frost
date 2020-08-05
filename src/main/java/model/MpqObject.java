@@ -249,7 +249,7 @@ public class MpqObject implements IReadable, IByteSerializable {
      */
     @Override
     public byte[] toBytes() {
-        //rebuild();
+        rebuild();
         byte[] nextToAdd;
         ByteBuffer archiveBytes = ByteBuffer.allocate(preHeader.length +
                 archiveHeader.getArchiveSize());
@@ -264,9 +264,6 @@ public class MpqObject implements IReadable, IByteSerializable {
         nextToAdd = hashTable.toBytes();
         archiveBytes.put(nextToAdd);
         for (int i = 0; i < fileData.size(); i++) {
-            if (i == 19) {
-                System.out.println("Here");
-            }
             FileDataEntry fileDataEntry = fileData.get(i);
             archiveBytes.position(fileDataEntry.getInitialPosition());
             nextToAdd = fileDataEntry.toBytes();
@@ -460,6 +457,7 @@ public class MpqObject implements IReadable, IByteSerializable {
 
         // Allocate space for each file data entry
         for (FileDataEntry entry : fileData) {
+
             int newFileOffset = currentPosition;
             int size = entry.getByteSize();
             currentPosition += size;
@@ -467,8 +465,12 @@ public class MpqObject implements IReadable, IByteSerializable {
                 // We need to leave these alone since the encryption
                 // uses the block offset in the key!
                 // TODO: Fixme
+                // TODO: For some reason it fails here on the (listfile)
+                // TODO: Need to investigate it. Maybe it's being overwritten?
+                // TODO: Also check the key. It should be the same.
                 context.getLogger().debug("Skipping reserved space for encrypted entry");
             } else {
+                entry.readAll();
                 entry.setOffsetPosition(newFileOffset);
                 entry.getBlockTableEntry().setBlockOffset(newFileOffset - newHeaderStart);
                 context.getLogger().debug("Reallocated " + size + " bytes for a block");

@@ -338,6 +338,15 @@ public class FileDataEntry implements IReadable, IByteSerializable {
         this.reader = reader;
     }
 
+    public void readAll() {
+        for (int i = 0; i < newSectors.size(); i++) {
+            FileSectorEntry sector = newSectors.get(i);
+            if (!sector.isRead()) {
+                sector.readRawData(i);
+            }
+        }
+    }
+
     /**
      * Converts this object into a byte array which represents
      * the same state as the object.
