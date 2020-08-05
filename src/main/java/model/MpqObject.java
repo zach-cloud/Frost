@@ -466,6 +466,7 @@ public class MpqObject implements IReadable, IByteSerializable {
             if (entry.getBlockTableEntry().isEncrypted() && entry.getBlockTableEntry().isKeyAdjusted()) {
                 // We need to leave these alone since the encryption
                 // uses the block offset in the key!
+                // TODO: Fixme
                 context.getLogger().debug("Skipping reserved space for encrypted entry");
             } else {
                 entry.setOffsetPosition(newFileOffset);
