@@ -374,29 +374,10 @@ public class MpqObject implements IReadable, IByteSerializable {
             context.getErrorHandler().handleCriticalError("Not written yet (reallocate hashtable)");
             return;
         }
-        // We're going to push the block table and hash table further in the archive so we have room
-        // for this new file we're about to add.
-        int newFilePos = -1;
-        if (archiveHeader.getBlockTableOffset() > archiveHeader.getHashTableOffset()) {
-            newFilePos = archiveHeader.getHashTableOffset();
-            context.getLogger().debug("Found that hash table was earlier offset, newFilePos=" + newFilePos);
-        } else {
-            newFilePos = archiveHeader.getBlockTableOffset();
-            context.getLogger().debug("Found that block table was earlier offset, newFilePos=" + newFilePos);
-        }
-
-        int newHashTablePos = archiveHeader.getHashTableOffset() + data.length + 1;
-        int newBlockTablePos = archiveHeader.getBlockTableOffset() + data.length + 1;
-        context.getLogger().debug("Moving hash table from " + archiveHeader.getHashTableOffset() +
-                " to " + newHashTablePos);
-        context.getLogger().debug("Moving block table from " + archiveHeader.getBlockTableOffset() +
-                " to " + newBlockTablePos);
-        this.archiveHeader.setHashTableOffset(newHashTablePos);
-        this.archiveHeader.setBlockTableOffset(newBlockTablePos);
-        context.getLogger().debug("Shifted offsets successfully.");
 
         // Create a new block table entry for this file.
-        BlockTableEntry blockTableEntry = new BlockTableEntry(newFilePos, data.length,
+        // Block offset will be fixed later when we rebuild it.
+        BlockTableEntry blockTableEntry = new BlockTableEntry(-1, data.length,
                 data.length, 0x80000000 + 0x01000000, context);
         // Set up our new hash table entry
         // We don't need to add it, since it already existed. It was just blank before.
@@ -411,30 +392,20 @@ public class MpqObject implements IReadable, IByteSerializable {
         blankHashtableEntry.setLanguage((short) 0);
         // Now we'll set up our new File Data Entry
 
-        FileDataEntry dataEntry = new FileDataEntry(headerStart, frostSecurity, newFilePos,
+        FileDataEntry dataEntry = new FileDataEntry(headerStart, frostSecurity, -1,
                 archiveHeader, blockTableEntry, blankHashtableEntry, context);
         dataEntry.setSingleSectorData(data);
         fileData.add(dataEntry);
         // Increase the block table size since we added a new entry
         // First, push back the hash table if we need to.
         int bytesRequired = FrostConstants.BYTES_PER_BLOCK_TABLE_ENTRY;
-
-        if (archiveHeader.getBlockTableOffset() < archiveHeader.getHashTableOffset()) {
-            context.getLogger().debug("Pushing back hash table by " + bytesRequired + " bytes");
-            newHashTablePos = newHashTablePos + bytesRequired;
-            context.getLogger().debug("Moving block table from " + (newHashTablePos - bytesRequired) +
-                    " to " + newHashTablePos);
-
-        }
         archiveHeader.setBlockTableEntries(archiveHeader.getBlockTableEntries() + 1);
 
         // Finally, increase the archive size.
         this.archiveHeader.setArchiveSize(1 + archiveHeader.getArchiveSize() + data.length + bytesRequired);
-        this.archiveHeader.setHashTableOffset(newHashTablePos);
-        this.archiveHeader.setBlockTableOffset(newBlockTablePos);
-        hashTableStart = newHashTablePos + headerStart;
-        blockTableStart = newBlockTablePos + headerStart;
         context.getLogger().debug("Added a single sector entry of " + data.length + " bytes");
+        rebuild();
+        context.getLogger().debug("Rebuilt MPQ after importing file.");
     }
 
     public HashTableEntry findAvailableHashtableEntry() {
@@ -454,6 +425,14 @@ public class MpqObject implements IReadable, IByteSerializable {
         int newBlockTableSize = blockTable.getEntries().size();
 
         int currentPosition = newHeaderStart + 32;
+        // Discover reserved space.
+        List<ReservedBlockSpace> reservedBlockSpaces = new ArrayList<>();
+        for (FileDataEntry entry : fileData) {
+            if (entry.getBlockTableEntry().isEncrypted() && entry.getBlockTableEntry().isKeyAdjusted()) {
+                reservedBlockSpaces.add(new ReservedBlockSpace(entry.getBlockTableEntry().getBlockOffset()
+                        , entry.getBlockTableEntry().getBlockSize()));
+            }
+        }
 
         // Allocate space for each file data entry
         for (FileDataEntry entry : fileData) {
@@ -461,19 +440,26 @@ public class MpqObject implements IReadable, IByteSerializable {
             int newFileOffset = currentPosition;
             int size = entry.getByteSize();
             currentPosition += size;
+            // See if this block is reserved
+            for(ReservedBlockSpace reservedBlockSpace : reservedBlockSpaces) {
+                context.getLogger().debug("Comparing for intersection: " + (currentPosition-newHeaderStart) + " and " + reservedBlockSpace.toString());
+                if(reservedBlockSpace.intersects(currentPosition-newHeaderStart+size) || reservedBlockSpace.intersects(currentPosition-newHeaderStart)) {
+                    context.getLogger().debug("Skipping " + size + " bytes due to reserved mpq space");
+                    currentPosition += size + entry.getBlockTableEntry().getBlockSize();
+                    newFileOffset +=size + entry.getBlockTableEntry().getBlockSize();
+                }
+            }
+
             if (entry.getBlockTableEntry().isEncrypted() && entry.getBlockTableEntry().isKeyAdjusted()) {
                 // We need to leave these alone since the encryption
                 // uses the block offset in the key!
-                // TODO: Fixme
-                // TODO: For some reason it fails here on the (listfile)
-                // TODO: Need to investigate it. Maybe it's being overwritten?
-                // TODO: Also check the key. It should be the same.
                 context.getLogger().debug("Skipping reserved space for encrypted entry");
             } else {
                 entry.readAll();
                 entry.setOffsetPosition(newFileOffset);
+                // Block offset factors in the header start automatically.
                 entry.getBlockTableEntry().setBlockOffset(newFileOffset - newHeaderStart);
-                context.getLogger().debug("Reallocated " + size + " bytes for a block");
+                context.getLogger().debug("Reallocated " + size + " bytes for a block at " + newFileOffset);
 
             }
         }

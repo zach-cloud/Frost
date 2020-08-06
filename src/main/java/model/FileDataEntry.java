@@ -23,6 +23,8 @@ public class FileDataEntry implements IReadable, IByteSerializable {
     private HashTableEntry hashTableEntry;
     private FrostSecurity frostSecurity;
 
+    private String fileName = "(unknown)";
+
     private boolean isComplete;
 
     private List<FileSectorEntry> newSectors;
@@ -209,12 +211,13 @@ public class FileDataEntry implements IReadable, IByteSerializable {
     }
 
     public byte[] getFileBytes(String fileName) {
+        this.fileName = fileName;
         if(blockTableEntry.getFileSize() <= 0) {
             // Extract the empty file, I guess?
             return new byte[0];
         }
         int key = -1;
-        if (blockTableEntry.isEncrypted()) {
+        if (blockTableEntry.isEncrypted() && !isComplete) {
             if (fileName.contains("\\")) {
                 fileName = fileName.substring(1 + fileName.lastIndexOf("\\"));
             }
@@ -357,10 +360,9 @@ public class FileDataEntry implements IReadable, IByteSerializable {
     public byte[] toBytes() {
         try {
             ByteBuffer buffer = ByteBuffer.allocate(blockTableEntry.getBlockSize());
-            context.getLogger().debug("Allocated " + blockTableEntry.getBlockSize() + " bytes");
-            if(blockTableEntry.getBlockSize() == 3008) {
-                System.out.println("Here");
-            }
+            context.getLogger().debug("Allocated " + blockTableEntry.getBlockSize() + " bytes for file " + fileName
+                    + "(pos=" + blockTableEntry.getBlockOffset() +"-" + (blockTableEntry.getBlockOffset() +
+                    blockTableEntry.getBlockSize()) + ")");
             buffer.order(ByteOrder.LITTLE_ENDIAN);
 
             for (int i = 0; i < originalOffsetTable.length; i++) {
