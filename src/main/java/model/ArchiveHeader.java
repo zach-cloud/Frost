@@ -52,7 +52,7 @@ public class ArchiveHeader implements IReadable, IByteSerializable {
     @Override
     public void read(BinaryReader reader) {
         try {
-            reader.goTo("MPQ");
+            reader.goTo("MPQ␚");
             int start = reader.getPosition();
             offsetStart = reader.getPosition();
             magic = reader.readString(4);
@@ -70,9 +70,9 @@ public class ArchiveHeader implements IReadable, IByteSerializable {
                 extendedBlockTableOffset = reader.readLong();
                 hashTableOffsetHigh = reader.readShort();
                 blockTableOffsetHigh = reader.readShort();
-                discoveredHeaderSize = 2 + reader.getPosition() - start;
+                discoveredHeaderSize = reader.getPosition() - start;
             } else {
-                discoveredHeaderSize = 4 + reader.getPosition() - start;
+                discoveredHeaderSize = reader.getPosition() - start;
             }
 
             sectorSize = 512 * (int) (Math.pow(2, sectorSizeShift));

@@ -32,7 +32,9 @@ public class FrostUtility {
 
             // Is there anything there?
             HashTableEntry entry = hashTable.get((int) initialEntry);
-            if (entry.getFileBlockIndex() == FrostConstants.MPQ_HASH_ENTRY_EMPTY) {
+            if (entry.getFileBlockIndex() == FrostConstants.MPQ_HASH_ENTRY_EMPTY ||
+                    entry.getFileBlockIndex() == MPQ_HASH_ENTRY_DELETED) {
+                context.getLogger().debug("Attempted to find file at index " + initialEntry + " but was missing/deleted");
                 return null;
             }
 

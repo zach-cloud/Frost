@@ -69,7 +69,7 @@ public class BlockTable implements IByteSerializable {
 
     public int addEntry(BlockTableEntry blockTableEntry) {
         entries.add(blockTableEntry);
-        return entries.size();
+        return entries.size() - 1;
     }
 
     public BlockTableEntry get(int index) {

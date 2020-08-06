@@ -17,8 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static frost.FrostConstants.MPQ_HASH_NAME_A;
-import static frost.FrostConstants.MPQ_HASH_NAME_B;
+import static frost.FrostConstants.*;
 
 public class MpqObject implements IReadable, IByteSerializable {
 
@@ -135,6 +134,9 @@ public class MpqObject implements IReadable, IByteSerializable {
 
         for (HashTableEntry hashTableEntry : hashTable.getEntries()) {
             // We only care about entries with contents
+            if(hashTableEntry.getCallbackId() == 61) {
+                System.out.println("Here");
+            }
             int blockTableIndex = hashTableEntry.getFileBlockIndex() % lastValidEntry;
             if (hashTableEntry.getFileBlockIndex() != FrostConstants.MPQ_HASH_ENTRY_DELETED &&
                     hashTableEntry.getFileBlockIndex() != FrostConstants.MPQ_HASH_ENTRY_EMPTY) {
@@ -218,8 +220,25 @@ public class MpqObject implements IReadable, IByteSerializable {
      * @return Byte array of uncompressed file data
      */
     public byte[] getFileBytes(String fileName) {
+
         try {
             HashTableEntry entry = findEntry(fileName);
+
+            // Discover duplicates
+            int count = 0;
+            for (FileDataEntry fileDataEntry : fileData) {
+                if (fileDataEntry.getHashTableEntry() == entry) {
+                    count++;
+                }
+            }
+
+            if(count == 0) {
+                context.getLogger().warn("No file found");
+                return new byte[0];
+            } else if(count > 1) {
+                context.getLogger().warn("Multiple files found");
+            }
+
             ByteBuffer totalBytes = ByteBuffer.allocate(0);
             for (FileDataEntry fileDataEntry : fileData) {
                 if (fileDataEntry.getHashTableEntry() == entry) {
@@ -369,7 +388,7 @@ public class MpqObject implements IReadable, IByteSerializable {
         context.getLogger().debug("Attempting to delete file: " + name);
         delete(name);
         // See if we have empty space to add this file in.
-        HashTableEntry blankHashtableEntry = findAvailableHashtableEntry();
+        HashTableEntry blankHashtableEntry = findAvailableHashtableEntry(name);
         if (blankHashtableEntry == null) {
             context.getErrorHandler().handleCriticalError("Not written yet (reallocate hashtable)");
             return;
@@ -389,7 +408,7 @@ public class MpqObject implements IReadable, IByteSerializable {
         blankHashtableEntry.setFilePathHashA(hashA);
         blankHashtableEntry.setFilePathHashB(hashB);
         blankHashtableEntry.setLanguage((short) 0);
-        blankHashtableEntry.setLanguage((short) 0);
+        blankHashtableEntry.setPlatform((short) 0);
         // Now we'll set up our new File Data Entry
 
         FileDataEntry dataEntry = new FileDataEntry(headerStart, frostSecurity, -1,
@@ -406,15 +425,31 @@ public class MpqObject implements IReadable, IByteSerializable {
         context.getLogger().debug("Added a single sector entry of " + data.length + " bytes");
         rebuild();
         context.getLogger().debug("Rebuilt MPQ after importing file.");
+        // TODO: PLAN!!!
+        // First, move the Block Table to the end of the file.
+        // Then add 16 bytes to the Block Table
+        // Then add the File bytes onto the end
     }
 
-    public HashTableEntry findAvailableHashtableEntry() {
-        for (HashTableEntry entry : hashTable.getEntries()) {
+    public HashTableEntry findAvailableHashtableEntry(String fileName) {
+        long initialEntry = (frostSecurity.hashAsInt(fileName, MPQ_HASH_TABLE_OFFSET) & (hashTable.size() - 1));
+        int i = (int)initialEntry;
+        int count = 0;
+        int maxSize = (int)hashTable.size();
+        context.getLogger().debug("Starting search at " + i);
+
+        while(count < maxSize) {
+            i = i % (maxSize - 1);
+
+            HashTableEntry entry = hashTable.get(i);
             if (entry.getFileBlockIndex() == FrostConstants.MPQ_HASH_ENTRY_DELETED ||
                     entry.getFileBlockIndex() == FrostConstants.MPQ_HASH_ENTRY_EMPTY) {
-                context.getLogger().debug("Found an available hashtable entry!");
+                context.getLogger().debug("Found an available hashtable entry at " + i);
                 return entry;
             }
+            context.getLogger().debug("Entry " + i + " is unavailable.");
+            i++;
+            count++;
         }
         return null;
     }
