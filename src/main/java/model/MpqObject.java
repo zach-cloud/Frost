@@ -134,9 +134,7 @@ public class MpqObject implements IReadable, IByteSerializable {
 
         for (HashTableEntry hashTableEntry : hashTable.getEntries()) {
             // We only care about entries with contents
-            if(hashTableEntry.getCallbackId() == 61) {
-                System.out.println("Here");
-            }
+
             int blockTableIndex = hashTableEntry.getFileBlockIndex() % lastValidEntry;
             if (hashTableEntry.getFileBlockIndex() != FrostConstants.MPQ_HASH_ENTRY_DELETED &&
                     hashTableEntry.getFileBlockIndex() != FrostConstants.MPQ_HASH_ENTRY_EMPTY) {
@@ -439,7 +437,7 @@ public class MpqObject implements IReadable, IByteSerializable {
         context.getLogger().debug("Starting search at " + i);
 
         while(count < maxSize) {
-            i = i % (maxSize - 1);
+            i = i % maxSize;
 
             HashTableEntry entry = hashTable.get(i);
             if (entry.getFileBlockIndex() == FrostConstants.MPQ_HASH_ENTRY_DELETED ||
@@ -523,7 +521,43 @@ public class MpqObject implements IReadable, IByteSerializable {
             return false;
         }
         context.getLogger().info("Deleting file from archive: " + name);
-        // TODO: Delete it.
+
+        context.getLogger().debug("Locating hash table entry");
+        HashTableEntry entry = frostUtility.findEntry
+                (hashTable, name, FrostConstants.ANY_LANGUAGE, FrostConstants.ANY_PLATFORM);
+        int whichBlockTableEntry = entry.getFileBlockIndex() % blockTable.getEntries().size();
+        context.getLogger().debug("Found hash entry as #" + entry.getCallbackId());
+        context.getLogger().debug("Associated block table entry is #" + whichBlockTableEntry + "(from " + entry.getFileBlockIndex() + ")");
+        int indexToRemove = -1;
+        for(int i = 0; i < fileData.size(); i++) {
+            FileDataEntry fileDataEntry = fileData.get(i);
+            if(fileDataEntry.getHashTableEntry() == entry) {
+                context.getLogger().debug("Deleting entry with block index #" + entry.getFileBlockIndex());
+                indexToRemove = i;
+            }
+        }
+        if(indexToRemove >= 0) {
+            context.getLogger().debug("Removing file data #" + indexToRemove);
+            fileData.remove(indexToRemove);
+        }
+        context.getLogger().debug("Nulling out hash table entry");
+        entry.setPlatform((short)-1);
+        entry.setLanguage((short)-1);
+        entry.setCallbackId(-1);
+        entry.setContext(null);
+        entry.setFileBlockIndex(-1);
+        entry.setFilePathHashA(-1);
+        entry.setFilePathHashB(-1);
+        context.getLogger().debug("Cleaning out block table entry");
+        for(HashTableEntry hashTableEntry : hashTable.getEntries()) {
+            int correctedIndex = hashTableEntry.getFileBlockIndex() % blockTable.getEntries().size();
+            if(correctedIndex >= indexToRemove) {
+                correctedIndex--;
+            }
+            hashTableEntry.setFileBlockIndex(correctedIndex);
+        }
+        blockTable.getEntries().remove(indexToRemove);
+        context.getLogger().debug("File removes successfully");
         return true;
     }
 

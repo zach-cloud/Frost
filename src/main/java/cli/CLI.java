@@ -28,7 +28,7 @@ public class CLI {
 
         FrostMpq frostMPQ = new FrostMpq(inFile, settings);
         while (true) {
-            System.out.print("Enter action type (extract/list/extractAllKnown/count/countKnown/save/quit/import): ");
+            System.out.print("Enter action type (extract/list/extractAllKnown/count/countKnown/save/import/delete/quit): ");
             String actionType = scanner.nextLine();
             executeAction(scanner, frostMPQ, actionType);
         }
@@ -51,15 +51,25 @@ public class CLI {
             System.out.println("File saved successfully");
         } else if (actionType.equalsIgnoreCase("import")) {
             runImport(scanner, frostMPQ);
+        } else if(actionType.equalsIgnoreCase("delete")) {
+            runDelete(scanner, frostMPQ);
         } else if (actionType.equalsIgnoreCase("quit")) {
             System.exit(0);
+        }
+    }
+
+    private void runDelete(Scanner scanner, FrostMpq frostMPQ) {
+        System.out.print("Enter file to delete: ");
+        String fileName = scanner.nextLine();
+        if(frostMPQ.fileExists(fileName)) {
+            frostMPQ.delete(fileName);
         }
     }
 
 
     private void runImport(Scanner scanner, FrostMpq frostMPQ) {
         try {
-            File inputFile = new File("");
+            File inputFile;
             do {
                 System.out.print("Enter file to import: ");
                 inputFile = new File(scanner.nextLine());
