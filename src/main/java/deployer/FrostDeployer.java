@@ -18,12 +18,14 @@ public final class FrostDeployer {
     private final String JAR_PATH = USER_PATH + "target\\Frost-" + VERSION + ".jar";
     private final String LICENSE_PATH = USER_PATH + "LICENSE";
     private final String LISTFILE_PATH = USER_PATH + "listfile.txt";
+    private final String README_PATH = USER_PATH + "README.md";
     private final String RUN_CONTENTS = "java -Xmx1g -jar Frost-" + VERSION + ".jar\nread  -n 1 -p \"Press any key to exit\"";
 
     private final String RELEASES_DESTINATION = USER_PATH + "Releases\\Frost" + VERSION + "\\";
     private final String JAR_DESTINATION = RELEASES_DESTINATION + "Frost-" + VERSION + ".jar";
     private final String LICENSE_DESTINATION = RELEASES_DESTINATION + "LICENSE";
     private final String LISTFILE_DESTINATION = RELEASES_DESTINATION + "listfile.txt";
+    private final String README_DESTINATION = RELEASES_DESTINATION + "README.md";
     private final String RUN_DESTINATION = RELEASES_DESTINATION + "run.bat";
 
     /**
@@ -41,6 +43,7 @@ public final class FrostDeployer {
         copyFile(JAR_PATH, JAR_DESTINATION);
         copyFile(LICENSE_PATH, LICENSE_DESTINATION);
         copyFile(LISTFILE_PATH, LISTFILE_DESTINATION);
+        copyFile(README_PATH, README_DESTINATION);
         writeFileContents(RUN_CONTENTS, RUN_DESTINATION);
     }
 
