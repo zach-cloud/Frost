@@ -5,15 +5,14 @@ import org.apache.commons.io.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
+
+import static settings.GlobalSettings.VERSION;
 
 /**
  * Deploys Frost as a standalone application.
  */
 public final class FrostDeployer {
 
-    private final String VERSION = "1.1.2";
     private final String USER_PATH = System.getProperty("user.dir") + "\\";
 
     private final String JAR_PATH = USER_PATH + "target\\Frost-" + VERSION + ".jar";
@@ -21,8 +20,8 @@ public final class FrostDeployer {
     private final String LISTFILE_PATH = USER_PATH + "listfile.txt";
     private final String RUN_CONTENTS = "java -Xmx1g -jar Frost-" + VERSION + ".jar\nread  -n 1 -p \"Press any key to exit\"";
 
-    private final String RELEASES_DESTINATION = USER_PATH + "Releases\\ReleasePackage" + VERSION + "\\";
-    private final String JAR_DESTINATION = RELEASES_DESTINATION + "JAST-" + VERSION + ".jar";
+    private final String RELEASES_DESTINATION = USER_PATH + "Releases\\Frost" + VERSION + "\\";
+    private final String JAR_DESTINATION = RELEASES_DESTINATION + "Frost-" + VERSION + ".jar";
     private final String LICENSE_DESTINATION = RELEASES_DESTINATION + "LICENSE";
     private final String LISTFILE_DESTINATION = RELEASES_DESTINATION + "listfile.txt";
     private final String RUN_DESTINATION = RELEASES_DESTINATION + "run.bat";
