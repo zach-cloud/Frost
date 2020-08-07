@@ -10,7 +10,7 @@ import settings.MpqContext;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public class FileSectorEntry implements IByteSerializable {
+public final class FileSectorEntry implements IByteSerializable {
 
     private int start; // Start byte, offset by the start of file data entry
     private int end; // End byte, offset by the start of file data entry

@@ -9,7 +9,7 @@ import settings.MpqContext;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-public class ArchiveHeader implements IReadable, IByteSerializable {
+public final class ArchiveHeader implements IReadable, IByteSerializable {
 
     private int offsetStart;
     private String magic = ""; //char4

@@ -1,6 +1,6 @@
 package compression;
 
-public class AdpcmChannel {
+public final class AdpcmChannel {
 
     private static final int INITIAL_STEP =0x2C;
 

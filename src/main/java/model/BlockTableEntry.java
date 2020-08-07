@@ -11,7 +11,7 @@ import static frost.FrostConstants.BYTES_PER_BLOCK_TABLE_ENTRY;
 /**
  * Represents a single entry in the Block Table.
  */
-public class BlockTableEntry implements IByteSerializable {
+public final class BlockTableEntry implements IByteSerializable {
 
     /** Basic block information */
     private int blockOffset;

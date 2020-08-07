@@ -6,7 +6,7 @@ import java.nio.ByteOrder;
 /**
  * Helper functions for byte operations.
  */
-public class ByteHelper {
+public final class ByteHelper {
 
     /**
      * Extracts a number of bytes from the byte array.

@@ -9,7 +9,7 @@ import java.io.File;
 import java.util.Scanner;
 import java.util.Set;
 
-public class CLI {
+public final class CLI {
 
     private String LISTFILE_PATH = "listfile.txt";
 
@@ -28,7 +28,7 @@ public class CLI {
 
         FrostMpq frostMPQ = new FrostMpq(inFile, settings);
         while (true) {
-            System.out.print("Enter action type (extract/list/extractAllKnown/count/countKnown/save/import/delete/quit): ");
+            System.out.print("Enter action type (extract/list/extractAllKnown/import/delete/save/quit): ");
             String actionType = scanner.nextLine();
             executeAction(scanner, frostMPQ, actionType);
         }
@@ -47,8 +47,7 @@ public class CLI {
         } else if (actionType.equalsIgnoreCase("countKnown")) {
             System.out.println("Known files: " + frostMPQ.getFileCount());
         } else if (actionType.equalsIgnoreCase("save")) {
-            frostMPQ.save(new File("saved.w3x"));
-            System.out.println("File saved successfully");
+            runSave(scanner, frostMPQ);
         } else if (actionType.equalsIgnoreCase("import")) {
             runImport(scanner, frostMPQ);
         } else if(actionType.equalsIgnoreCase("delete")) {
@@ -56,6 +55,13 @@ public class CLI {
         } else if (actionType.equalsIgnoreCase("quit")) {
             System.exit(0);
         }
+    }
+
+    private void runSave(Scanner scanner, FrostMpq frostMPQ) {
+        System.out.print("Enter filename to save as: ");
+        String fileName = scanner.nextLine();
+        frostMPQ.save(new File(fileName));
+        System.out.println("File saved");
     }
 
     private void runDelete(Scanner scanner, FrostMpq frostMPQ) {

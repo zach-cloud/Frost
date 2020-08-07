@@ -1,6 +1,6 @@
 package model;
 
-public class ReservedBlockSpace {
+public final class ReservedBlockSpace {
 
     private int offset;
     private int size;

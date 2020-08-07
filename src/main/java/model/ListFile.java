@@ -8,7 +8,7 @@ import java.util.Set;
 /**
  * Representation of an internal MPQ listfile.
  */
-public class ListFile {
+public final class ListFile {
 
     private MpqContext context;
     private Set<String> entries;

@@ -16,7 +16,7 @@ import java.util.List;
 /**
  * Helper class for reading binary files (such as MPQs)
  */
-public class BinaryReader {
+public final class BinaryReader {
 
     private ByteOrder byteOrder;
     private ByteBuffer stream;

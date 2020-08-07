@@ -3,7 +3,7 @@ package exception;
 /**
  * An exception that is thrown when an encrypt/decrypt exception fails.
  */
-public class EncryptionException extends RuntimeException {
+public final class EncryptionException extends RuntimeException {
 
     public EncryptionException(Exception other) {
         super(other);

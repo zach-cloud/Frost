@@ -23,7 +23,7 @@ import static helper.ByteHelper.extractBytes;
  * This is intended to ONLY be used to interface with the
  * MPQ file format which uses these algorithms internally.
  */
-public class FrostSecurity implements IStormCrypt {
+public final class FrostSecurity implements IStormCrypt {
 
     private enum OperationType {
         ENCRYPT,

@@ -1,8 +1,22 @@
 # Frost
 
-!Under Construction!
+Frost is a multi-platform MPQ editing tool which can:
 
-FrozenMPQ2 is a multi-platform MPQ editing library written in pure Java. The MPQ editing logic was implemented based on Storm's implementation notes.
+- Extract
+
+- Import
+
+- Fix MPQ corruption
+
+And more!
+
+This tool is meant to mimic the implementation of Storm as much as possible. 
+There is no such thing as a "read only" MPQ for Frost. This tool can bypass 
+PG protection and Spazzler and import files to corrupted maps.
+
+This tool is very much in an alpha state. It will be improved going forward, but
+it is usable right now. Please report all bugs through either GitHub issues or the
+release post. Feel free to make any suggestions or ask questions as well!
 
 # Features
 
@@ -13,7 +27,95 @@ FrozenMPQ2 is a multi-platform MPQ editing library written in pure Java. The MPQ
 - Import files
 - Rebuild archive
 
-# Usage guide
+# User Guide
+
+You need Java installed to use this.
+
+Double click run.bat (rename to run.sh for Linux based machines, such as Macs)
+
+A command line interface will open. and prompt you to select a file. Write the name of the file
+you want to import. This file should be in the same location as the Frost jar file.
+
+After the file opens up successfully, it will give you a menu of operations to choose.
+This is what each of the operations do:
+
+1: Extract.
+
+The extract action will prompt you for a file name to extract. This should be the exact
+file name as it appears in the MPQ Archive. It will tell you if it doesn't exist.
+
+If the file exists, it will extract it to the "out" folder.
+
+2: List
+
+This will provide you a list of all known filenames in the archive.
+
+It first attempts to use the internal listfile. If that listfile doesn't exist or isn't
+complete, then it will try to use an external listfile. If there is a file named "listfile.txt",
+it will use that. If there isn't, it will prompt you for a listfile to use. If you don't enter a
+listfile, it'll continue without it.
+
+After finding all known files, it will give you a report with all file names.
+
+3: ExtractAllKnown
+
+This will extract all known files to the "out" directory.
+
+It will not extract files that it does not know the name of.
+
+It first attempts to use the internal listfile. If that listfile doesn't exist or isn't
+complete, then it will try to use an external listfile. If there is a file named "listfile.txt",
+it will use that. If there isn't, it will prompt you for a listfile to use. If you don't enter a
+listfile, it'll continue without it.
+
+4: Import
+
+Imports a file from disk into the archive. The file should exist in the same directory
+as the Frost jar, and should be the same filename as you want to put into the archive.
+
+If the file already exists, it will delete it first.
+
+If the hash table is filled up, it will refuse to add new files.
+
+It adds the file as a single entity, uncompressed.
+
+5: Delete
+
+Deletes the file name from the archive.
+
+6: Save
+
+Saves the MPQ archive with modifications. It will prompt you for the name to save as
+(will not overwrite by default). Before saving, the tool will delete the (attributes) file
+
+Note that the mpq WILL NOT BE SAVED if you don't use this command. If you import a file and
+don't press save after, it will not be imported!
+
+7: Quit
+
+Quits the program.
+
+# Limitations
+
+Currently, the tool is limited in the following ways. I plan to improve it going forward.
+
+- We do not support all compression types. It's possible the tool will find a compression
+type that it doesn't know how to decompress, in which case it will refuse to extract
+the file. These types were not found during my testing.
+
+- All files are only added as an uncompressed, single entity. This means the map size
+will increase when you replace files.
+
+- It's not the most user friendly tool yet. It is command-line only and lacks very
+good error reporting.
+
+- The Extended Hash Table, Extended Block Table, Weak Signature, and Strong Signature are
+not supported. I have not seen any maps using these fields in my tests.
+
+# Programmer guide
+
+NOT AVAILABLE YET THROUGH MAVEN!
+Coming sooon!
 
 1: Import FrozenMPQ2 as a dependency to your project using Maven (or equivalent)
 
@@ -37,18 +139,11 @@ If you do not want to worry about the internal details, simply use the interface
 
 # Operations provided
 
-TODO.
-
-# Command line interface
-
-FMPQ2 comes with a simple command line interface for use as a demo, or to interface with other languages that can't import maven project.
-
-In order to use, simply type a command like this:
-```$xslt
-java -jar FrozenMPQ2 (TODO)
-```
+Coming soon!!
 
 # Settings
+
+NOTE: Most of these options don't do anything yet.
 
 This utility comes with many settings you can use to customize how the tool works.
 

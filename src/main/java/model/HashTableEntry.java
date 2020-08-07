@@ -7,7 +7,7 @@ import frost.FrostConstants;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-public class HashTableEntry implements IByteSerializable {
+public final class HashTableEntry implements IByteSerializable {
 
     /** Stores hashes of file for comparison */
     private int filePathHashA;

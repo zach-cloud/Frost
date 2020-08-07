@@ -14,7 +14,7 @@ import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FileDataEntry implements IReadable, IByteSerializable {
+public final class FileDataEntry implements IReadable, IByteSerializable {
 
     private int initialPosition;
     private int archiveOffset;

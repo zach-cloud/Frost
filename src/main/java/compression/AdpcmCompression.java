@@ -12,7 +12,7 @@ import java.util.List;
  * Based off source: https://chromium.googlesource.com/chromiumos/third_party/alsa-lib/+/808ce5deb3550e522a0c3087f1c851bdf87d3464/src/pcm/pcm_adpcm.c
  * And: https://github.com/inwc3/JMPQ3/blob/master/src/main/java/systems/crigges/jmpq3/compression/ADPCM.java
  */
-public class AdpcmCompression implements IGenericCompression {
+public final class AdpcmCompression implements IGenericCompression {
 
     private final int totalChannels;
 

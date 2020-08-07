@@ -12,7 +12,7 @@ import java.io.IOException;
 
 import static frost.FrostConstants.BLOCK_TABLE_ENCRYPTION_KEY;
 
-public class EncryptedBlockTable implements IReadable, IByteSerializable {
+public final class EncryptedBlockTable implements IReadable, IByteSerializable {
 
     private byte[] encryptedData;
 

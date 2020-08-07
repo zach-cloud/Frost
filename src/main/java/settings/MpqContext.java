@@ -2,7 +2,7 @@ package settings;
 
 import io.FileWriter;
 
-public class MpqContext {
+public final class MpqContext {
 
     private MpqLogger logger;
     private MpqSettings settings;

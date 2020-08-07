@@ -19,7 +19,7 @@ import java.util.Set;
 
 import static frost.FrostConstants.*;
 
-public class MpqObject implements IReadable, IByteSerializable {
+public final class MpqObject implements IReadable, IByteSerializable {
 
     private FrostUtility frostUtility;
     private FrostSecurity frostSecurity;

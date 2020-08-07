@@ -8,7 +8,7 @@ import interfaces.IGenericCompression;
  * Represents a Deflation or Inflation compression type.
  * Can perform both operations.
  */
-public class DeflationCompression implements IGenericCompression {
+public final class DeflationCompression implements IGenericCompression {
 
     private Inflater inflater;
     private Deflater deflater;

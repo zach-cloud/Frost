@@ -6,7 +6,7 @@ import settings.MpqContext;
 
 import static frost.FrostConstants.*;
 
-public class FrostUtility {
+public final class FrostUtility {
 
     private FrostSecurity frostSecurity;
     private MpqContext context;
@@ -34,7 +34,6 @@ public class FrostUtility {
             HashTableEntry entry = hashTable.get((int) initialEntry);
             if (entry.getFileBlockIndex() == FrostConstants.MPQ_HASH_ENTRY_EMPTY ||
                     entry.getFileBlockIndex() == MPQ_HASH_ENTRY_DELETED) {
-                context.getLogger().debug("Attempted to find file at index " + initialEntry + " but was missing/deleted");
                 return null;
             }
 

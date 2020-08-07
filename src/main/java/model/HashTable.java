@@ -13,7 +13,7 @@ import static frost.FrostConstants.BYTES_PER_HASH_TABLE_ENTRY;
 import static frost.FrostConstants.HASH_TABLE_ENCRYPTION_KEY;
 import static helper.ByteHelper.*;
 
-public class HashTable implements IByteSerializable {
+public final class HashTable implements IByteSerializable {
 
     private List<HashTableEntry> entries;
 

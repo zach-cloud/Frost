@@ -4,7 +4,7 @@ import java.io.PrintStream;
 
 import static settings.MpqSettings.LogSettings.*;
 
-public class MpqLogger {
+public final class MpqLogger {
 
     private PrintStream out;
     private MpqSettings.LogSettings logSettings;

@@ -6,7 +6,7 @@ import interfaces.IGenericCompression;
 /**
  * Wrapper for Exploder class.
  */
-public class ImplodeCompression implements IGenericCompression {
+public final class ImplodeCompression implements IGenericCompression {
 
     /**
      * Applies this compression type.

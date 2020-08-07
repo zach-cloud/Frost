@@ -40,7 +40,7 @@ package compression.exploder;
 /* 06/29/03  1.00  First version                                             */
 /*****************************************************************************/
 
-public class Exploder
+public final class Exploder
 {
     private static final int PK_LITERAL_SIZE_FIXED    = 0; // Use fixed size literal bytes, used for binary data
     private static final int PK_LITERAL_SIZE_VARIABLE = 1; // Use variable size literal bytes, used for text

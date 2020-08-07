@@ -14,7 +14,7 @@ import static frost.FrostConstants.BLOCK_TABLE_ENCRYPTION_KEY;
 import static helper.ByteHelper.*;
 import static frost.FrostConstants.BYTES_PER_BLOCK_TABLE_ENTRY;
 
-public class BlockTable implements IByteSerializable {
+public final class BlockTable implements IByteSerializable {
     private List<BlockTableEntry> entries;
     private FrostSecurity security;
     private MpqContext context;

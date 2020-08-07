@@ -5,7 +5,7 @@ import interfaces.IByteSerializable;
 import reader.BinaryReader;
 import settings.MpqContext;
 
-public class StrongSignature implements IReadable, IByteSerializable {
+public final class StrongSignature implements IReadable, IByteSerializable {
 
     private MpqContext context;
 

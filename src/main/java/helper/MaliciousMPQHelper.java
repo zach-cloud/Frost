@@ -6,7 +6,7 @@ import frost.FrostConstants;
 /**
  * Helper class to reverse the effects of malicious MPQs.
  */
-public class MaliciousMPQHelper {
+public final class MaliciousMPQHelper {
 
     /**
      * MPQs may have an invalid block table size set, where the size is much

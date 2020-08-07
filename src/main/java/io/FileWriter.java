@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-public class FileWriter {
+public final class FileWriter {
 
     /**
      * Writes bytes to file.

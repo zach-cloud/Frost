@@ -18,7 +18,7 @@ import java.util.Set;
 /**
  * Represents an MPQ archive that can be read, extracted, and modified.
  */
-public class FrostMpq implements IFrostMpq, IByteSerializable {
+public final class FrostMpq implements IFrostMpq, IByteSerializable {
 
     /**
      * File that is an MPQ archive.
@@ -164,6 +164,7 @@ public class FrostMpq implements IFrostMpq, IByteSerializable {
     @Override
     public void save(File destination) {
         try {
+            delete("(attributes)");
             context.getFileWriter().write(toBytes(), destination);
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -218,9 +219,9 @@ public class FrostMpq implements IFrostMpq, IByteSerializable {
                 // Only adds if it actually exists
                 mpqObject.addFileName(line);
             }
-            context.getLogger().debug("Found " + mpqObject.getKnownFileCount() + " files!");
-            context.getLogger().debug("Archive contains: " + mpqObject.getFileCount() + " files");
-            context.getLogger().info("Unknown file count: " + mpqObject.getUnknownFileCount());
+//            context.getLogger().debug("Found " + mpqObject.getKnownFileCount() + " files!");
+//            context.getLogger().debug("Archive contains: " + mpqObject.getFileCount() + " files");
+//            context.getLogger().info("Unknown file count: " + mpqObject.getUnknownFileCount());
         } catch (IOException ex) {
             context.getErrorHandler().handleCriticalError(ex.getMessage());
         }

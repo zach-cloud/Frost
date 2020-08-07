@@ -2,7 +2,7 @@ package settings;
 
 import exception.MpqException;
 
-public class MpqErrorHandler {
+public final class MpqErrorHandler {
 
     private MpqSettings settings;
     private MpqLogger logger;

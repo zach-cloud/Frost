@@ -6,7 +6,7 @@ import settings.MpqContext;
 /**
  * Handles compression types based off compression flags.
  */
-public class CompressionHandler {
+public final class CompressionHandler {
 
     /* Compression flag constants */
     private static final byte IMAADPCM_STEREO = 0x40;

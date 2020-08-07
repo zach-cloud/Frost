@@ -1,6 +1,6 @@
 package settings;
 
-public class MpqSettings {
+public final class MpqSettings {
 
     public enum LogSettings {
         DEBUG,

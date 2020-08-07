@@ -11,7 +11,7 @@ import java.io.IOException;
 
 import static frost.FrostConstants.*;
 
-public class EncryptedHashTable implements IReadable, IByteSerializable {
+public final class EncryptedHashTable implements IReadable, IByteSerializable {
 
     private byte[] encryptedData;
 

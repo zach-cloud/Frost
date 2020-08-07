@@ -5,7 +5,7 @@ import interfaces.IByteSerializable;
 import reader.BinaryReader;
 import settings.MpqContext;
 
-public class ExtendedBlockTable implements IReadable, IByteSerializable {
+public final class ExtendedBlockTable implements IReadable, IByteSerializable {
 
     private MpqContext context;
 
