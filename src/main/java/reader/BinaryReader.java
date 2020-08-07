@@ -71,11 +71,11 @@ public final class BinaryReader {
         byte currentByte;   // Current byte read from buffer
         byte currentLetterByte; // Current byte in the
         int currentLetter = 0;  // Current match length that we have found so far
-        int position = stream.position();   // How many we have read
+        int position = ((Buffer) stream).position();   // How many we have read
         int correctPosition = 0; // What position we will return
         int maxLength = stream.array().length;
         // Scan entire buffer from current position
-        while (stream.position() < maxLength) {
+        while (((Buffer) stream).position() < maxLength) {
             position++;
             currentByte = readByte();
             currentLetterByte = (byte) flag.charAt(currentLetter);
@@ -92,7 +92,7 @@ public final class BinaryReader {
             }
             if(currentLetter == size) {
                 // We found a match. Reset and track this match.
-                correctPosition = stream.position() - size;
+                correctPosition = ((Buffer) stream).position() - size;
                 currentLetter = 0;
             }
         }
@@ -105,7 +105,7 @@ public final class BinaryReader {
     }
 
     public void goTo(int flag) {
-        stream.position(flag);
+        ((Buffer) stream).position(flag);
     }
 
     /**
@@ -116,7 +116,7 @@ public final class BinaryReader {
             throw new RuntimeException("Attempted to undo a non-existent operation");
         }
         int adjustment = undoStack.remove(undoStack.size() - 1);
-        stream.position(stream.position() - adjustment);
+        ((Buffer) stream).position(((Buffer) stream).position() - adjustment);
     }
 
     /**
@@ -262,11 +262,11 @@ public final class BinaryReader {
     }
 
     public int getPosition() {
-        return stream.position();
+        return ((Buffer) stream).position();
     }
 
     public void setPosition(int start) {
-        stream.position(start);
+        ((Buffer) stream).position(start);
     }
 
     public int getSize() {

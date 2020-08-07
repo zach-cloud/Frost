@@ -10,6 +10,7 @@ import settings.MpqContext;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -241,9 +242,9 @@ public final class MpqObject implements IReadable, IByteSerializable {
             for (FileDataEntry fileDataEntry : fileData) {
                 if (fileDataEntry.getHashTableEntry() == entry) {
                     byte[] bytesToAdd = fileDataEntry.getFileBytes(fileName);
-                    if (bytesToAdd.length + totalBytes.position() > totalBytes.capacity()) {
-                        context.getLogger().debug("Reallocating to: " + bytesToAdd.length + totalBytes.position());
-                        totalBytes = reallocate(totalBytes, bytesToAdd.length + totalBytes.position());
+                    if (bytesToAdd.length + ((Buffer) totalBytes).position() > totalBytes.capacity()) {
+                        context.getLogger().debug("Reallocating to: " + bytesToAdd.length + ((Buffer) totalBytes).position());
+                        totalBytes = reallocate(totalBytes, bytesToAdd.length + ((Buffer) totalBytes).position());
                     }
                     context.getLogger().debug("Adding " + bytesToAdd.length + " bytes");
                     totalBytes.put(bytesToAdd);
@@ -274,15 +275,15 @@ public final class MpqObject implements IReadable, IByteSerializable {
         archiveBytes.put(preHeader);
         nextToAdd = archiveHeader.toBytes();
         archiveBytes.put(nextToAdd);
-        archiveBytes.position(blockTableStart);
+        ((Buffer) archiveBytes).position(blockTableStart);
         nextToAdd = blockTable.toBytes();
         archiveBytes.put(nextToAdd);
-        archiveBytes.position(hashTableStart);
+        ((Buffer) archiveBytes).position(hashTableStart);
         nextToAdd = hashTable.toBytes();
         archiveBytes.put(nextToAdd);
         for (int i = 0; i < fileData.size(); i++) {
             FileDataEntry fileDataEntry = fileData.get(i);
-            archiveBytes.position(fileDataEntry.getInitialPosition());
+            ((Buffer) archiveBytes).position(fileDataEntry.getInitialPosition());
             nextToAdd = fileDataEntry.toBytes();
             archiveBytes.put(nextToAdd);
         }
