@@ -12,7 +12,7 @@ public final class MpqLogger {
     /**
      * Defines a PrintStream to send messages to
      *
-     * @param out   PrintStream to log to
+     * @param out      PrintStream to log to
      * @param settings MPQ Settings
      */
     public MpqLogger(PrintStream out, MpqSettings settings) {
@@ -37,25 +37,25 @@ public final class MpqLogger {
     }
 
     public void debug(String message) {
-        if(logSettings == DEBUG) {
+        if (logSettings == DEBUG) {
             out.println("DEBUG: " + message);
         }
     }
 
     public void info(String message) {
-        if(logSettings == INFO || logSettings == DEBUG) {
+        if (logSettings == INFO || logSettings == DEBUG) {
             out.println("INFO: " + message);
         }
     }
 
     public void warn(String message) {
-        if(logSettings == WARN || logSettings == INFO || logSettings == DEBUG) {
+        if (logSettings == WARN || logSettings == INFO || logSettings == DEBUG) {
             out.println("WARN: " + message);
         }
     }
 
     public void error(String message) {
-        if(logSettings != NONE) {
+        if (logSettings != NONE) {
             out.println("ERROR: " + message);
         }
     }

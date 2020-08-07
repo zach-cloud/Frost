@@ -55,7 +55,7 @@ public final class FileDataEntry implements IReadable, IByteSerializable {
         this.hashTableEntry = hashTableEntry;
         this.context = context;
         sectorsInFile = blockTableEntry.getFileSize() / header.getSectorSize();
-        if(sectorsInFile < 0) {
+        if (sectorsInFile < 0) {
             context.getLogger().warn("Negative sector count: " + sectorsInFile);
         }
         if (blockTableEntry.getFileSize() % header.getSectorSize() != 0) {
@@ -67,7 +67,7 @@ public final class FileDataEntry implements IReadable, IByteSerializable {
     }
 
     private void read(BinaryReader reader, int key) {
-        if(blockTableEntry.getFileSize() <= 0) {
+        if (blockTableEntry.getFileSize() <= 0) {
             // A worthless block. Let's skip it.
             isComplete = false;
             return;
@@ -75,9 +75,9 @@ public final class FileDataEntry implements IReadable, IByteSerializable {
         reader.setPosition(initialPosition);
 
         try {
-           if (!(blockTableEntry.isCompressed() || blockTableEntry.isImploded())) {
-               context.getLogger().debug("Reading data with no offset table");
-               readUncompressedFileData(reader, key);
+            if (!(blockTableEntry.isCompressed() || blockTableEntry.isImploded())) {
+                context.getLogger().debug("Reading data with no offset table");
+                readUncompressedFileData(reader, key);
             } else {
                 // For this one, we need to read the sector offset table.
                 context.getLogger().debug("Reading data with an offset table");
@@ -93,7 +93,7 @@ public final class FileDataEntry implements IReadable, IByteSerializable {
         this.originalOffsetTable = new int[0];
         this.sectorOffsetTable = new int[0]; // We do not need a sector offset table.
         FileSectorEntry entry = new FileSectorEntry(0, data.length, blockTableEntry.getBlockOffset(),
-                data.length, data.length, false, false, -1,null,  context, frostSecurity);
+                data.length, data.length, false, false, -1, null, context, frostSecurity);
         entry.setSingleSectorData(data);
         newSectors.add(entry);
         isComplete = true;
@@ -123,7 +123,7 @@ public final class FileDataEntry implements IReadable, IByteSerializable {
 
         // While unlikely, it's possible that an uncompressed file can be large enough
         // to be split into multiple sectors.
-        for(int i = 0; i < sectorsInFile - 1; i++) {
+        for (int i = 0; i < sectorsInFile - 1; i++) {
             int start = currentPosition;
             int end = currentPosition + header.getSectorSize();
             currentPosition = end;
@@ -212,7 +212,7 @@ public final class FileDataEntry implements IReadable, IByteSerializable {
 
     public byte[] getFileBytes(String fileName) {
         this.fileName = fileName;
-        if(blockTableEntry.getFileSize() <= 0) {
+        if (blockTableEntry.getFileSize() <= 0) {
             // Extract the empty file, I guess?
             return new byte[0];
         }
@@ -354,14 +354,14 @@ public final class FileDataEntry implements IReadable, IByteSerializable {
      * Converts this object into a byte array which represents
      * the same state as the object.
      *
-     * @return  Byte array of object.
+     * @return Byte array of object.
      */
     @Override
     public byte[] toBytes() {
         try {
             ByteBuffer buffer = ByteBuffer.allocate(blockTableEntry.getBlockSize());
             context.getLogger().debug("Allocated " + blockTableEntry.getBlockSize() + " bytes for file " + fileName
-                    + "(pos=" + blockTableEntry.getBlockOffset() +"-" + (blockTableEntry.getBlockOffset() +
+                    + "(pos=" + blockTableEntry.getBlockOffset() + "-" + (blockTableEntry.getBlockOffset() +
                     blockTableEntry.getBlockSize()) + ")");
             buffer.order(ByteOrder.LITTLE_ENDIAN);
 
@@ -387,16 +387,16 @@ public final class FileDataEntry implements IReadable, IByteSerializable {
     }
 
     public int getByteSize() {
-        if(blockTableEntry.isSingleUnit()) {
+        if (blockTableEntry.isSingleUnit()) {
             return blockTableEntry.getBlockSize();
         } else {
-            return blockTableEntry.getBlockSize() + (4 * (sectorsInFile+1));
+            return blockTableEntry.getBlockSize() + (4 * (sectorsInFile + 1));
         }
     }
 
     public void setOffsetPosition(int newFileOffset) {
         initialPosition = newFileOffset;
-        for(FileSectorEntry sector : newSectors) {
+        for (FileSectorEntry sector : newSectors) {
             sector.setOffset(newFileOffset);
         }
     }

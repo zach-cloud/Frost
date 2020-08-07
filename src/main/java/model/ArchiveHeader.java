@@ -107,13 +107,12 @@ public final class ArchiveHeader implements IReadable, IByteSerializable {
 
         if (format == 1) {
             buffer.putLong(extendedBlockTableOffset);
-            buffer.putShort((short)hashTableOffsetHigh);
-            buffer.putShort((short)blockTableOffsetHigh);
+            buffer.putShort((short) hashTableOffsetHigh);
+            buffer.putShort((short) blockTableOffsetHigh);
         }
 
         return buffer.array();
     }
-
 
 
     public String getMagic() {

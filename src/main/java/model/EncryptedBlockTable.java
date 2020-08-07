@@ -19,7 +19,7 @@ public final class EncryptedBlockTable implements IReadable, IByteSerializable {
     private int entryCount;
     private MpqContext context;
 
-    public EncryptedBlockTable (int entryCount, MpqContext context) {
+    public EncryptedBlockTable(int entryCount, MpqContext context) {
         this.entryCount = entryCount;
         this.context = context;
     }
@@ -36,7 +36,7 @@ public final class EncryptedBlockTable implements IReadable, IByteSerializable {
      * Converts this object into a byte array which represents
      * the same state as the object.
      *
-     * @return  Byte array of object.
+     * @return Byte array of object.
      */
     @Override
     public byte[] toBytes() {

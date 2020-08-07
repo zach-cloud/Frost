@@ -1,6 +1,7 @@
 package model;
 
 import settings.MpqContext;
+
 import java.io.*;
 import java.util.HashSet;
 import java.util.Set;
@@ -16,7 +17,7 @@ public final class ListFile {
     /**
      * Creates a Listfile with no entries
      *
-     * @param context   MPQ context
+     * @param context MPQ context
      */
     public ListFile(MpqContext context) {
         this.context = context;
@@ -26,9 +27,9 @@ public final class ListFile {
     /**
      * Creates a Listfile with entries from a newline-delimited String
      *
-     * @param source      Newline delimited String
-     * @param mpqObject   MPQ object to search for files in
-     * @param context     MPQ context
+     * @param source    Newline delimited String
+     * @param mpqObject MPQ object to search for files in
+     * @param context   MPQ context
      */
     public ListFile(String source, MpqObject mpqObject, MpqContext context) {
         this.context = context;

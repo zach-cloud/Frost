@@ -14,7 +14,7 @@ public final class MpqErrorHandler {
 
     public void handleError(String errorMessage, boolean critical) {
         logger.error(errorMessage);
-        if(settings.getMpqOpenSettings() == MpqSettings.MpqOpenSettings.ANY ||
+        if (settings.getMpqOpenSettings() == MpqSettings.MpqOpenSettings.ANY ||
                 (critical && settings.getMpqOpenSettings() == MpqSettings.MpqOpenSettings.CRITICAL)) {
             throw new MpqException(errorMessage);
         }

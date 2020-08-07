@@ -90,7 +90,7 @@ public final class BinaryReader {
                 }
                 currentLetter = 0;
             }
-            if(currentLetter == size) {
+            if (currentLetter == size) {
                 // We found a match. Reset and track this match.
                 correctPosition = ((Buffer) stream).position() - size;
                 currentLetter = 0;

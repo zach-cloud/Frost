@@ -6,7 +6,7 @@ public final class ReservedBlockSpace {
     private int size;
 
     public boolean intersects(int position) {
-        return (position >= offset && position <= offset+size);
+        return (position >= offset && position <= offset + size);
     }
 
     public ReservedBlockSpace(int offset, int size) {
@@ -15,7 +15,7 @@ public final class ReservedBlockSpace {
     }
 
     public String toString() {
-        return "(" + offset + "," + (offset+size) + ")";
+        return "(" + offset + "," + (offset + size) + ")";
     }
 
     public int getOffset() {

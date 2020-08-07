@@ -24,9 +24,9 @@ public final class DeflationCompression implements IGenericCompression {
     /**
      * Inflates src into dest.
      *
-     * @param src   Source bytes (compressed)
-     * @param dest  Byte array of the size of the uncompressed data
-     * @return      Filled destination array. You can also simply use dest after running method.
+     * @param src  Source bytes (compressed)
+     * @param dest Byte array of the size of the uncompressed data
+     * @return Filled destination array. You can also simply use dest after running method.
      */
     public byte[] undo(byte[] src, byte[] dest) {
         inflater.init();

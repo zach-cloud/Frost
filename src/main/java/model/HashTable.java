@@ -23,8 +23,8 @@ public final class HashTable implements IByteSerializable {
     /**
      * Decrypts provided block table and parses the entries.
      *
-     * @param frostSecurity            Encryption module with little endian order
-     * @param encryptedHashTable    Encrypted hash table (read from file)
+     * @param frostSecurity      Encryption module with little endian order
+     * @param encryptedHashTable Encrypted hash table (read from file)
      */
     public HashTable(FrostSecurity frostSecurity, EncryptedHashTable encryptedHashTable, MpqContext context) {
         entries = new ArrayList<>();
@@ -34,12 +34,12 @@ public final class HashTable implements IByteSerializable {
         context.getLogger().debug("Attempting to decrypt hash table... key=" + HASH_TABLE_ENCRYPTION_KEY);
         byte[] decryptedData = frostSecurity.decryptBytes(encryptedData, HASH_TABLE_ENCRYPTION_KEY);
         context.getLogger().debug("Decrypted bytes into: " + decryptedData.length);
-        if(decryptedData.length % BYTES_PER_HASH_TABLE_ENTRY != 0) {
+        if (decryptedData.length % BYTES_PER_HASH_TABLE_ENTRY != 0) {
             context.getErrorHandler().handleCriticalError("Could not convert decrypted bytes " +
                     "into table entries (size = " + decryptedData.length + ")");
         }
 
-        for(int i = 0 ; i < decryptedData.length / BYTES_PER_HASH_TABLE_ENTRY; i++) {
+        for (int i = 0; i < decryptedData.length / BYTES_PER_HASH_TABLE_ENTRY; i++) {
             byte[] filePathHashA = extractBytes(decryptedData, i * BYTES_PER_HASH_TABLE_ENTRY, 4);
             byte[] filePathHashB = extractBytes(decryptedData, 4 + (i * BYTES_PER_HASH_TABLE_ENTRY), 4);
             byte[] language = extractBytes(decryptedData, 8 + (i * BYTES_PER_HASH_TABLE_ENTRY), 2);
@@ -57,19 +57,19 @@ public final class HashTable implements IByteSerializable {
      * Converts this object into a byte array which represents
      * the same state as the object.
      *
-     * @return  Byte array of object.
+     * @return Byte array of object.
      */
     @Override
     public byte[] toBytes() {
         ByteBuffer buffer = ByteBuffer.allocate(entries.size() * BYTES_PER_HASH_TABLE_ENTRY);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
 
-        for(HashTableEntry entry : entries) {
+        for (HashTableEntry entry : entries) {
             buffer.put(entry.toBytes());
         }
 
         EncryptedHashTable encryptedHashTable = new EncryptedHashTable(entries.size(), context);
-        encryptedHashTable.encrypt(buffer.array(),security);
+        encryptedHashTable.encrypt(buffer.array(), security);
         return encryptedHashTable.toBytes();
     }
 

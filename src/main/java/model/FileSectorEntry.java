@@ -36,15 +36,15 @@ public final class FileSectorEntry implements IByteSerializable {
     /**
      * Creates a new Sector entry containing data from a file sector
      *
-     * @param start Start byte, offset by the start of file data entry
-     * @param end   End byte, offset by the start of file data entry
-     * @param offset    Offset to start of file data entry
+     * @param start          Start byte, offset by the start of file data entry
+     * @param end            End byte, offset by the start of file data entry
+     * @param offset         Offset to start of file data entry
      * @param compressedSize Compressed size of sector
-     * @param realSize  File size of sector (decompressed)
-     * @param compressed    True if compressed, false if not.
-     * @param encrypted True if encrypted, false if not
-     * @param reader    File reader linked to mpq file
-     * @param context   FrostMpq context
+     * @param realSize       File size of sector (decompressed)
+     * @param compressed     True if compressed, false if not.
+     * @param encrypted      True if encrypted, false if not
+     * @param reader         File reader linked to mpq file
+     * @param context        FrostMpq context
      */
     public FileSectorEntry(int start, int end, int offset, int compressedSize,
                            int realSize, boolean compressed, boolean encrypted, int key,
@@ -67,20 +67,20 @@ public final class FileSectorEntry implements IByteSerializable {
      * Performs reading of bytes
      */
     public void readRawData(int sectorCount) {
-        if(isRead) {
+        if (isRead) {
             // We already read rawData so there's no need to do it again
             return;
         }
         try {
             // We only read rawData when requested to save memory!
-            reader.setPosition(start+offset);
-            rawData = reader.readBytes((end+offset) - (start+offset));
-            if(encrypted) {
-                context.getLogger().debug("Decrypting file data with key=" + key+sectorCount);
+            reader.setPosition(start + offset);
+            rawData = reader.readBytes((end + offset) - (start + offset));
+            if (encrypted) {
+                context.getLogger().debug("Decrypting file data with key=" + key + sectorCount);
                 rawData = frostSecurity.decryptBytes(rawData, key + sectorCount);
                 this.sectorCount = sectorCount;
             }
-            if(rawData.length != compressedSize) {
+            if (rawData.length != compressedSize) {
                 context.getErrorHandler().handleError("Compressed size check failed ("
                         + rawData.length + " vs " + compressedSize + ")");
             }
@@ -96,10 +96,10 @@ public final class FileSectorEntry implements IByteSerializable {
      * @param fileBytes Byte buffer to add to
      */
     public void addBytes(ByteBuffer fileBytes) {
-        if(isProcessed) {
+        if (isProcessed) {
             fileBytes.put(fileData);
         } else {
-            if(compressed) {
+            if (compressed) {
                 byte compressionFlag = rawData[0];
                 fileData = ByteHelper.trimBytes(rawData, 1);
                 fileData = compressionHandler.decompress(fileData, compressionFlag, realSize);
@@ -115,15 +115,15 @@ public final class FileSectorEntry implements IByteSerializable {
      * Converts this object into a byte array which represents
      * the same state as the object.
      *
-     * @return  Byte array of object.
+     * @return Byte array of object.
      */
     @Override
     public byte[] toBytes() {
-        if(!isRead){
+        if (!isRead) {
             context.getErrorHandler().handleCriticalError
                     ("Attempted to add bytes before reading them");
         }
-        if(encrypted) {
+        if (encrypted) {
             return frostSecurity.encryptBytes(rawData, key + sectorCount);
         } else {
             return rawData;

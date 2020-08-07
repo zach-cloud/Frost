@@ -23,7 +23,7 @@ public final class FrostUtility {
      * @param fileName  File name to look for
      * @param lang      Language to look for (or ANY_LANGUAGE for any)
      * @param platform  Platform to look for (or ANY_PLATFORM for any)
-     * @return          Hash table entry, or null if not exists.
+     * @return Hash table entry, or null if not exists.
      */
     public HashTableEntry findEntry(HashTable hashTable, String fileName, short lang, short platform) {
         try {
@@ -68,7 +68,7 @@ public final class FrostUtility {
      * @param fileName  File name to look for
      * @param lang      Language to look for (or ANY_LANGUAGE for any)
      * @param platform  Platform to look for (or ANY_PLATFORM for any)
-     * @return          True if exists, or false if not
+     * @return True if exists, or false if not
      */
     public boolean hasFile(HashTable hashTable, String fileName, short lang, short platform) {
         return this.findEntry(hashTable, fileName, lang, platform) != null;

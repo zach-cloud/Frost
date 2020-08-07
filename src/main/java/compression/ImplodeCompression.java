@@ -32,7 +32,7 @@ public final class ImplodeCompression implements IGenericCompression {
      */
     @Override
     public byte[] undo(byte[] src, byte[] dest) {
-        Exploder.pkexplode(src,dest);
+        Exploder.pkexplode(src, dest);
         return dest;
     }
 }

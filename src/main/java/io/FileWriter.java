@@ -9,12 +9,12 @@ public class FileWriter {
     /**
      * Writes bytes to file.
      *
-     * @param data  Data to print to file
-     * @param file  File to write to
-     * @throws IOException  If file cannot be written to.
+     * @param data Data to print to file
+     * @param file File to write to
+     * @throws IOException If file cannot be written to.
      */
     public void write(byte[] data, File file) throws IOException {
-        if(file.exists()) {
+        if (file.exists()) {
             file.delete();
         }
         file.mkdirs();

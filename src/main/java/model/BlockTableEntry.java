@@ -13,16 +13,22 @@ import static frost.FrostConstants.BYTES_PER_BLOCK_TABLE_ENTRY;
  */
 public final class BlockTableEntry implements IByteSerializable {
 
-    /** Basic block information */
+    /**
+     * Basic block information
+     */
     private int blockOffset;
     private int blockSize;
     private int fileSize;
     private int flags;
 
-    /** Array index callback for debugging */
+    /**
+     * Array index callback for debugging
+     */
     private int callbackId;
 
-    /** Calculated from flags */
+    /**
+     * Calculated from flags
+     */
     private boolean isFile;
     private boolean singleUnit;
     private boolean keyAdjusted;
@@ -47,7 +53,7 @@ public final class BlockTableEntry implements IByteSerializable {
      * Converts this object into a byte array which represents
      * the same state as the object.
      *
-     * @return  Byte array of object.
+     * @return Byte array of object.
      */
     @Override
     public byte[] toBytes() {
@@ -65,14 +71,14 @@ public final class BlockTableEntry implements IByteSerializable {
      * If not valid, logs a warning.
      */
     private void checkFlagValidity() {
-        if(keyAdjusted && !encrypted) {
+        if (keyAdjusted && !encrypted) {
             context.getLogger().warn("Block cannot be key adjusted and not encrypted");
         }
-        if(!isFile) {
-            if(blockSize > 0) {
+        if (!isFile) {
+            if (blockSize > 0) {
                 context.getLogger().warn("Block is not a file but has size");
             }
-            if(singleUnit || keyAdjusted || encrypted || compressed || imploded) {
+            if (singleUnit || keyAdjusted || encrypted || compressed || imploded) {
                 context.getLogger().warn("Block is not a file but has flags");
             }
         }

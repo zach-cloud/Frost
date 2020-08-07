@@ -118,7 +118,7 @@ public final class FrostSecurity implements IStormCrypt {
 
         s = s.toUpperCase();
         for (char c : s.toCharArray()) {
-            ch = Byte.toUnsignedInt((byte)c);
+            ch = Byte.toUnsignedInt((byte) c);
             seed1 = encryptionTable[(hashType * 0x100) + ch] ^ (seed1 + seed2);
             seed2 = ch + seed1 + seed2 + (seed2 << 5) + 3;
         }
@@ -345,8 +345,8 @@ public final class FrostSecurity implements IStormCrypt {
     /**
      * Gets the array index for this key.
      *
-     * @param key   Key value
-     * @return      Array index to lookup
+     * @param key Key value
+     * @return Array index to lookup
      */
     private int getLookupIndexEncrypt(int key) {
         return (0x400 + (key & 0xFF)) % encryptionTable.length;

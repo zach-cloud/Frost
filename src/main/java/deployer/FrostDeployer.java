@@ -50,8 +50,8 @@ public final class FrostDeployer {
     /**
      * Writes the string to a file
      *
-     * @param contents      Data to write
-     * @param destination   Destination file
+     * @param contents    Data to write
+     * @param destination Destination file
      */
     private void writeFileContents(String contents, String destination) throws IOException {
         FileUtils.write(new File(destination), contents, Charset.defaultCharset());
@@ -61,17 +61,17 @@ public final class FrostDeployer {
     /**
      * Copies a file
      *
-     * @param path          Source file
-     * @param destination   Destination file
+     * @param path        Source file
+     * @param destination Destination file
      */
     private void copyFile(String path, String destination) throws IOException {
         System.out.println("Copying file: " + path + " to: " + destination);
         File file = new File(path);
-        if(!file.exists()) {
+        if (!file.exists()) {
             throw new IOException("File does not exist: " + path);
         }
         File dest = new File(destination);
-        if(dest.exists()) {
+        if (dest.exists()) {
             dest.delete();
         }
         dest.mkdirs();
@@ -85,7 +85,7 @@ public final class FrostDeployer {
     /**
      * Main method to execute and deploy a JAST package.
      *
-     * @param args  Ignored
+     * @param args Ignored
      */
     public static void main(String[] args) throws IOException {
         new FrostDeployer().run();

@@ -30,6 +30,15 @@ public final class CompressionHandler {
         this.context = context;
     }
 
+    /**
+     * Decompresses the data
+     *
+     * @param data             Data bytes
+     * @param whichCompression Which compression to undo
+     * @param compressionName  Name of compression (for logging)
+     * @param desiredSize      Size of decompressed file
+     * @return Decompressed file data
+     */
     private byte[] applyGenericDecompress(byte[] data, IGenericCompression whichCompression,
                                           String compressionName, int desiredSize) {
         context.getLogger().debug
@@ -49,27 +58,27 @@ public final class CompressionHandler {
         boolean stereoCompressed = (compressionFlag & IMAADPCM_STEREO) != 0;
         boolean monoCompressed = (compressionFlag & IMAADPCM_MONO) != 0;
 
-        if(bzip2Compressed) {
+        if (bzip2Compressed) {
             context.getErrorHandler().
                     handleCriticalError("Not yet written (Bzip)");
         }
-        if(implodedCompressed) {
+        if (implodedCompressed) {
             data = applyGenericDecompress(data, implodeCompression,
                     "Implode", desiredSize);
         }
-        if(deflatedCompressed) {
+        if (deflatedCompressed) {
             data = applyGenericDecompress(data, deflationCompression,
                     "Inflate", desiredSize);
         }
-        if(huffmanCompressed) {
+        if (huffmanCompressed) {
             context.getErrorHandler().
                     handleCriticalError("Not yet written (Huffman)");
         }
-        if(stereoCompressed) {
+        if (stereoCompressed) {
             data = applyGenericDecompress(data, stereoCompression,
                     "Stereo", desiredSize);
         }
-        if(monoCompressed) {
+        if (monoCompressed) {
             data = applyGenericDecompress(data, monoCompression,
                     "Mono", desiredSize);
         }

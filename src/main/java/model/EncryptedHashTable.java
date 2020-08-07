@@ -19,7 +19,7 @@ public final class EncryptedHashTable implements IReadable, IByteSerializable {
 
     private MpqContext context;
 
-    public EncryptedHashTable (int entryCount, MpqContext context) {
+    public EncryptedHashTable(int entryCount, MpqContext context) {
         this.entryCount = entryCount;
         this.context = context;
     }
@@ -52,7 +52,7 @@ public final class EncryptedHashTable implements IReadable, IByteSerializable {
      * Converts this object into a byte array which represents
      * the same state as the object.
      *
-     * @return  Byte array of object.
+     * @return Byte array of object.
      */
     @Override
     public byte[] toBytes() {

@@ -2,7 +2,7 @@ package compression;
 
 public final class AdpcmChannel {
 
-    private static final int INITIAL_STEP =0x2C;
+    private static final int INITIAL_STEP = 0x2C;
 
     private short state;
     private short step;

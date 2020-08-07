@@ -106,8 +106,10 @@ public final class MpqObject implements IReadable, IByteSerializable {
         }
     }
 
+    /**
+     * Calculates offsets of block/hash table/etc.
+     */
     private void calculateOffsets() {
-        // Calculate some offsets
         blockTableStart = archiveHeader.getBlockTableOffset() + headerStart;
         hashTableStart = archiveHeader.getHashTableOffset() + headerStart;
         extendedBlockTableOffset = archiveHeader.getExtendedBlockTableOffset() + headerStart;
@@ -115,6 +117,12 @@ public final class MpqObject implements IReadable, IByteSerializable {
         blockTableOffsetHigh = archiveHeader.getBlockTableOffsetHigh() + headerStart;
     }
 
+    /**
+     * Reads the block table from the mpq
+     *
+     * @param reader          Binary reader linked to map
+     * @param blockTableStart Index of block table in the file
+     */
     private void readBlockTable(BinaryReader reader, int blockTableStart) {
         reader.setPosition(blockTableStart);
         this.encryptedBlockTable = new EncryptedBlockTable(archiveHeader.getBlockTableEntries(), context);
@@ -122,6 +130,12 @@ public final class MpqObject implements IReadable, IByteSerializable {
         this.blockTable = new BlockTable(frostSecurity, encryptedBlockTable, context);
     }
 
+    /**
+     * Reads the hash table from the mpq.
+     *
+     * @param reader         Binary reader linked to map
+     * @param hashTableStart Index of hash table in file
+     */
     private void readHashTable(BinaryReader reader, int hashTableStart) {
         reader.setPosition(hashTableStart);
         this.encryptedHashTable = new EncryptedHashTable(archiveHeader.getHashTableEntries(), context);
@@ -129,6 +143,12 @@ public final class MpqObject implements IReadable, IByteSerializable {
         this.hashTable = new HashTable(frostSecurity, encryptedHashTable, context);
     }
 
+    /**
+     * Reads all of the file data entries
+     * It gets the file data entries from the hash table
+     *
+     * @param reader Binary reader linked to map
+     */
     private void readFileData(BinaryReader reader) {
         this.fileData = new ArrayList<>();
         int lastValidEntry = blockTable.getEntries().size();
@@ -197,7 +217,7 @@ public final class MpqObject implements IReadable, IByteSerializable {
      * @param fileName File name of file
      * @return Hash table entry.
      */
-    private HashTableEntry findEntry(String fileName) {
+    public HashTableEntry findEntry(String fileName) {
         HashTableEntry entry = frostUtility.findEntry
                 (hashTable, fileName, FrostConstants.ANY_LANGUAGE, FrostConstants.ANY_PLATFORM);
         if (entry == null) {
@@ -206,6 +226,13 @@ public final class MpqObject implements IReadable, IByteSerializable {
         return entry;
     }
 
+    /**
+     * Changes the size of this buffer.
+     *
+     * @param original Original bytebuffer to reallocate
+     * @param length   Length to reallocate to
+     * @return New (reallocated) buffer
+     */
     private ByteBuffer reallocate(ByteBuffer original, int length) {
         ByteBuffer newBuffer = ByteBuffer.allocate(length);
         newBuffer.put(original);
@@ -219,7 +246,6 @@ public final class MpqObject implements IReadable, IByteSerializable {
      * @return Byte array of uncompressed file data
      */
     public byte[] getFileBytes(String fileName) {
-
         try {
             HashTableEntry entry = findEntry(fileName);
 
@@ -231,10 +257,10 @@ public final class MpqObject implements IReadable, IByteSerializable {
                 }
             }
 
-            if(count == 0) {
+            if (count == 0) {
                 context.getLogger().warn("No file found");
                 return new byte[0];
-            } else if(count > 1) {
+            } else if (count > 1) {
                 context.getLogger().warn("Multiple files found");
             }
 
@@ -423,14 +449,21 @@ public final class MpqObject implements IReadable, IByteSerializable {
         context.getLogger().debug("Rebuilt MPQ after importing file.");
     }
 
-    public HashTableEntry findAvailableHashtableEntry(String fileName) {
+    /**
+     * Finds the first available hash table entry to put
+     * this file in, or null if none exists.
+     *
+     * @param fileName File name of file to add
+     * @return An available (blank) hash table entry, or null
+     */
+    private HashTableEntry findAvailableHashtableEntry(String fileName) {
         long initialEntry = (frostSecurity.hashAsInt(fileName, MPQ_HASH_TABLE_OFFSET) & (hashTable.size() - 1));
-        int i = (int)initialEntry;
+        int i = (int) initialEntry;
         int count = 0;
-        int maxSize = (int)hashTable.size();
+        int maxSize = (int) hashTable.size();
         context.getLogger().debug("Starting search at " + i);
 
-        while(count < maxSize) {
+        while (count < maxSize) {
             i = i % maxSize;
 
             HashTableEntry entry = hashTable.get(i);
@@ -446,7 +479,13 @@ public final class MpqObject implements IReadable, IByteSerializable {
         return null;
     }
 
-    private void rebuild() {
+    /**
+     * Re-organizes the file in this MPQ.
+     * Re-allocates space for all files
+     * Places hash table after file data
+     * Places block table after hash table
+     */
+    public void rebuild() {
         // Calculate new values for the header.
         int newHeaderStart = preHeader.length;
         int newBlockTableSize = blockTable.getEntries().size();
@@ -463,17 +502,16 @@ public final class MpqObject implements IReadable, IByteSerializable {
 
         // Allocate space for each file data entry
         for (FileDataEntry entry : fileData) {
-
             int newFileOffset = currentPosition;
             int size = entry.getByteSize();
             currentPosition += size;
             // See if this block is reserved
-            for(ReservedBlockSpace reservedBlockSpace : reservedBlockSpaces) {
-                context.getLogger().debug("Comparing for intersection: " + (currentPosition-newHeaderStart) + " and " + reservedBlockSpace.toString());
-                if(reservedBlockSpace.intersects(currentPosition-newHeaderStart+size) || reservedBlockSpace.intersects(currentPosition-newHeaderStart)) {
+            for (ReservedBlockSpace reservedBlockSpace : reservedBlockSpaces) {
+                context.getLogger().debug("Comparing for intersection: " + (currentPosition - newHeaderStart) + " and " + reservedBlockSpace.toString());
+                if (reservedBlockSpace.intersects(currentPosition - newHeaderStart + size) || reservedBlockSpace.intersects(currentPosition - newHeaderStart)) {
                     context.getLogger().debug("Skipping " + size + " bytes due to reserved mpq space");
                     currentPosition += size + entry.getBlockTableEntry().getBlockSize();
-                    newFileOffset +=size + entry.getBlockTableEntry().getBlockSize();
+                    newFileOffset += size + entry.getBlockTableEntry().getBlockSize();
                 }
             }
 
@@ -523,29 +561,29 @@ public final class MpqObject implements IReadable, IByteSerializable {
         context.getLogger().debug("Found hash entry as #" + entry.getCallbackId());
         context.getLogger().debug("Associated block table entry is #" + whichBlockTableEntry + "(from " + entry.getFileBlockIndex() + ")");
         int indexToRemove = -1;
-        for(int i = 0; i < fileData.size(); i++) {
+        for (int i = 0; i < fileData.size(); i++) {
             FileDataEntry fileDataEntry = fileData.get(i);
-            if(fileDataEntry.getHashTableEntry() == entry) {
+            if (fileDataEntry.getHashTableEntry() == entry) {
                 context.getLogger().debug("Deleting entry with block index #" + entry.getFileBlockIndex());
                 indexToRemove = i;
             }
         }
-        if(indexToRemove >= 0) {
+        if (indexToRemove >= 0) {
             context.getLogger().debug("Removing file data #" + indexToRemove);
             fileData.remove(indexToRemove);
         }
         context.getLogger().debug("Nulling out hash table entry");
-        entry.setPlatform((short)-1);
-        entry.setLanguage((short)-1);
+        entry.setPlatform((short) -1);
+        entry.setLanguage((short) -1);
         entry.setCallbackId(-1);
         entry.setContext(null);
         entry.setFileBlockIndex(-1);
         entry.setFilePathHashA(-1);
         entry.setFilePathHashB(-1);
         context.getLogger().debug("Cleaning out block table entry");
-        for(HashTableEntry hashTableEntry : hashTable.getEntries()) {
+        for (HashTableEntry hashTableEntry : hashTable.getEntries()) {
             int correctedIndex = hashTableEntry.getFileBlockIndex() % blockTable.getEntries().size();
-            if(correctedIndex >= indexToRemove) {
+            if (correctedIndex >= indexToRemove) {
                 correctedIndex--;
             }
             hashTableEntry.setFileBlockIndex(correctedIndex);

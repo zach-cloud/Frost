@@ -9,18 +9,26 @@ import java.nio.ByteOrder;
 
 public final class HashTableEntry implements IByteSerializable {
 
-    /** Stores hashes of file for comparison */
+    /**
+     * Stores hashes of file for comparison
+     */
     private int filePathHashA;
     private int filePathHashB;
 
-    /** We really don't care about these. */
+    /**
+     * We really don't care about these.
+     */
     private short language;
     private short platform;
 
-    /** Index into the block table to search for */
+    /**
+     * Index into the block table to search for
+     */
     private int fileBlockIndex;
 
-    /** Array index callback for debugging */
+    /**
+     * Array index callback for debugging
+     */
     private int callbackId;
     private MpqContext context;
 
@@ -37,7 +45,7 @@ public final class HashTableEntry implements IByteSerializable {
      * Converts this object into a byte array which represents
      * the same state as the object.
      *
-     * @return  Byte array of object.
+     * @return Byte array of object.
      */
     @Override
     public byte[] toBytes() {

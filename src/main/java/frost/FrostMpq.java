@@ -102,8 +102,8 @@ public final class FrostMpq implements IFrostMpq, IByteSerializable {
     /**
      * Creates a MPQ with the specified file and context.
      *
-     * @param origin    Origin file
-     * @param context   MPQ context
+     * @param origin  Origin file
+     * @param context MPQ context
      */
     public FrostMpq(File origin, MpqContext context) {
         this.origin = origin;
@@ -149,7 +149,7 @@ public final class FrostMpq implements IFrostMpq, IByteSerializable {
      * Converts this object into a byte array which represents
      * the same state as the object.
      *
-     * @return  Byte array of object.
+     * @return Byte array of object.
      */
     @Override
     public byte[] toBytes() {
@@ -205,11 +205,11 @@ public final class FrostMpq implements IFrostMpq, IByteSerializable {
     /**
      * Adds files from the external listfile (disk) into the internal listfile
      *
-     * @param externalListfilePath  Text file containing external listfile
+     * @param externalListfilePath Text file containing external listfile
      */
     @Override
     public void addExternalListfile(File externalListfilePath) {
-        if(mpqObject.getUnknownFileCount() == 0) {
+        if (mpqObject.getUnknownFileCount() == 0) {
             context.getLogger().info("Skipping external listfile since we know all files.");
         }
         try {
@@ -219,9 +219,6 @@ public final class FrostMpq implements IFrostMpq, IByteSerializable {
                 // Only adds if it actually exists
                 mpqObject.addFileName(line);
             }
-//            context.getLogger().debug("Found " + mpqObject.getKnownFileCount() + " files!");
-//            context.getLogger().debug("Archive contains: " + mpqObject.getFileCount() + " files");
-//            context.getLogger().info("Unknown file count: " + mpqObject.getUnknownFileCount());
         } catch (IOException ex) {
             context.getErrorHandler().handleCriticalError(ex.getMessage());
         }
@@ -230,16 +227,17 @@ public final class FrostMpq implements IFrostMpq, IByteSerializable {
     /**
      * Retrieves a Set of the file names in the archive.
      * This set cannot be modified.
-     *
+     * <p>
      * If you really want to modify it, you should retrieve the MpqObject
      * and then get the file names from that. Do this at your own risk.
      *
-     * @return  Unmodifiable set of file names
+     * @return Unmodifiable set of file names
      */
     @Override
     public Set<String> getFileNames() {
         return Collections.unmodifiableSet(mpqObject.getFileNames());
     }
+
     /**
      * Extracts all files that we know the name of
      */
@@ -252,7 +250,7 @@ public final class FrostMpq implements IFrostMpq, IByteSerializable {
      * Extracts all files that we know the name of, and includes
      * an external listfile.
      *
-     * @param externalListfilePath  Path to external listfile.
+     * @param externalListfilePath Path to external listfile.
      */
     @Override
     public void extractAllKnown(File externalListfilePath) {
@@ -265,7 +263,7 @@ public final class FrostMpq implements IFrostMpq, IByteSerializable {
      * This is not necessarily the amount of files that can be known
      * or extracted, simply the number of block table entries.
      *
-     * @return  Total file count (theoretical)
+     * @return Total file count (theoretical)
      */
     @Override
     public int getFileCount() {
@@ -275,7 +273,7 @@ public final class FrostMpq implements IFrostMpq, IByteSerializable {
     /**
      * Returns the number of files that we know the name of.
      *
-     * @return  Number of known files.
+     * @return Number of known files.
      */
     @Override
     public int getKnownFileCount() {
@@ -285,7 +283,7 @@ public final class FrostMpq implements IFrostMpq, IByteSerializable {
     /**
      * Returns the amount of files that we don't know the name of.
      *
-     * @return  Number of unknown files
+     * @return Number of unknown files
      */
     public int getUnknownFileCount() {
         return mpqObject.getUnknownFileCount();
@@ -295,8 +293,8 @@ public final class FrostMpq implements IFrostMpq, IByteSerializable {
      * Imports this file into the archive.
      * Replaces if the file already exists.
      *
-     * @param name  File name to import
-     * @param data  File bytes
+     * @param name File name to import
+     * @param data File bytes
      */
     public void importFile(String name, byte[] data) {
         mpqObject.importFile(name, data);
@@ -305,9 +303,9 @@ public final class FrostMpq implements IFrostMpq, IByteSerializable {
     /**
      * Deletes a file from the archive.
      *
-     * @param name  Filename to delete
+     * @param name Filename to delete
      * @return true if deleted; false if not.
-     *         returns false if the file didn't exist
+     * returns false if the file didn't exist
      */
     public boolean delete(String name) {
         return mpqObject.delete(name);
