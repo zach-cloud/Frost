@@ -380,9 +380,6 @@ public final class MpqObject implements IReadable, IByteSerializable {
      * @param data File bytes
      */
     public void importFile(String name, byte[] data) {
-        // TODO: The reason this fails is because the block/hash table don't come last
-        // TODO: Append this file to the very end of the archive.
-        // TODO: OR finish the rebuild function and then use it.
         // First, delete file if it exists.
         context.getLogger().debug("Attempting to delete file: " + name);
         delete(name);
@@ -424,10 +421,6 @@ public final class MpqObject implements IReadable, IByteSerializable {
         context.getLogger().debug("Added a single sector entry of " + data.length + " bytes");
         rebuild();
         context.getLogger().debug("Rebuilt MPQ after importing file.");
-        // TODO: PLAN!!!
-        // First, move the Block Table to the end of the file.
-        // Then add 16 bytes to the Block Table
-        // Then add the File bytes onto the end
     }
 
     public HashTableEntry findAvailableHashtableEntry(String fileName) {
