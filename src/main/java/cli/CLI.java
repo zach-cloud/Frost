@@ -13,7 +13,7 @@ public final class CLI {
 
     private String LISTFILE_PATH = "listfile.txt";
 
-    private void run() {
+    protected void run() {
         Scanner scanner = new Scanner(System.in);
         System.out.println("------------------");
         System.out.println("Frost v " + GlobalSettings.VERSION);
@@ -126,9 +126,5 @@ public final class CLI {
             listfilePath = new File(scanner.nextLine());
         }
         return listfilePath;
-    }
-
-    public static void main(String[] args) {
-        new CLI().run();
     }
 }
