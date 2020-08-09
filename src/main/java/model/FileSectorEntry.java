@@ -46,12 +46,12 @@ public final class FileSectorEntry implements IByteSerializable {
      * @param reader         File reader linked to mpq file
      * @param context        FrostMpq context
      */
-    public FileSectorEntry(int start, int end, int offset, int compressedSize,
+    public FileSectorEntry(int start, int end, long offset, int compressedSize,
                            int realSize, boolean compressed, boolean encrypted, int key,
                            BinaryReader reader, MpqContext context, FrostSecurity frostSecurity) {
         this.start = start;
         this.end = end;
-        this.offset = offset;
+        this.offset = (int)offset;
         this.reader = reader;
         this.context = context;
         this.compressedSize = compressedSize;
@@ -59,7 +59,7 @@ public final class FileSectorEntry implements IByteSerializable {
         this.compressed = compressed;
         this.encrypted = encrypted;
         this.key = key;
-        this.compressionHandler = new CompressionHandler(context);
+        this.compressionHandler = context.getCompressionHandler();
         this.frostSecurity = frostSecurity;
     }
 

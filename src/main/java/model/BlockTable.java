@@ -42,6 +42,7 @@ public final class BlockTable implements IByteSerializable {
             byte[] blockSize = extractBytes(decryptedData, 4 + (i * BYTES_PER_BLOCK_TABLE_ENTRY), 4);
             byte[] fileSize = extractBytes(decryptedData, 8 + (i * BYTES_PER_BLOCK_TABLE_ENTRY), 4);
             byte[] flags = extractBytes(decryptedData, 12 + (i * BYTES_PER_BLOCK_TABLE_ENTRY), 4);
+
             BlockTableEntry entry = new BlockTableEntry(byteToInt(blockOffset),
                     byteToInt(blockSize), byteToInt(fileSize), byteToInt(flags), context);
             entry.setCallbackId(i);

@@ -7,6 +7,11 @@ The following are some behavior that have been observed of malicious MPQ files:
 - Adding a fake header. This comes before the actual header and has garbage values.
 - Setting archive size to a too-large amount.
 
+- Setting block size to -1
+- Setting flags to invalid values
+- Setting file size to a negative number
+- Setting block table entry point to a negative number
+
 These issues can be resolved by the following steps:
 - ???
 - Calculate the total number of bytes available past the offset and divide by 16. That is the real block table size.

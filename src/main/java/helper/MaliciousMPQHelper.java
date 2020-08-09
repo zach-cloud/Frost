@@ -18,13 +18,13 @@ public final class MaliciousMPQHelper {
      * @param blockTableOffset       Block table offset in archive
      * @return Valid block table size
      */
-    public static int fixBlockTableSize(int originalBlockTableSize,
-                                        int archiveSize, int blockTableOffset) {
-        int totalBytesAvailable = archiveSize - blockTableOffset;
-        int desiredBytes = FrostConstants.BYTES_PER_BLOCK_TABLE_ENTRY * originalBlockTableSize;
+    public static int fixTableSize(int originalBlockTableSize,
+                                   int archiveSize, int blockTableOffset) {
+        long totalBytesAvailable = archiveSize - blockTableOffset;
+        long desiredBytes = (long)FrostConstants.BYTES_PER_BLOCK_TABLE_ENTRY * (long)originalBlockTableSize;
         if (desiredBytes > totalBytesAvailable
                 || desiredBytes < 0) {
-            originalBlockTableSize = totalBytesAvailable / FrostConstants.BYTES_PER_BLOCK_TABLE_ENTRY;
+            originalBlockTableSize = (int)(totalBytesAvailable / FrostConstants.BYTES_PER_BLOCK_TABLE_ENTRY);
         }
         return originalBlockTableSize;
     }

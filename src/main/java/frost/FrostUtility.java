@@ -1,8 +1,12 @@
 package frost;
 
+import model.FileDataEntry;
 import model.HashTable;
 import model.HashTableEntry;
 import settings.MpqContext;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static frost.FrostConstants.*;
 
@@ -14,6 +18,46 @@ public final class FrostUtility {
     public FrostUtility(FrostSecurity frostSecurity, MpqContext context) {
         this.frostSecurity = frostSecurity;
         this.context = context;
+    }
+
+    public FileDataEntry findFileData(String fileName, List<FileDataEntry> fileData) {
+        int hashA = frostSecurity.hashAsInt(fileName, MPQ_HASH_NAME_A);
+        int hashB = frostSecurity.hashAsInt(fileName, MPQ_HASH_NAME_B);
+        for(FileDataEntry entry : fileData) {
+            if(entry.getBlockTableEntry().getFileSize() == 795) {
+                System.out.println("HERE");
+            }
+            if(entry.getHashTableEntry().getFilePathHashA() == hashA &&
+                    entry.getHashTableEntry().getFilePathHashB() == hashB) {
+                return entry;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Finds a hash table entry for file name, or null if no such entry exists.
+     * Brute force method.
+     *
+     * @param hashTable Hash table to look through
+     * @param fileName  File name to look for
+     * @param lang      Language to look for (or ANY_LANGUAGE for any)
+     * @param platform  Platform to look for (or ANY_PLATFORM for any)
+     * @return Hash table entry, or null if not exists.
+     */
+    public HashTableEntry findEntryV2(HashTable hashTable, String fileName, short lang, short platform) {
+        int hashA = frostSecurity.hashAsInt(fileName, MPQ_HASH_NAME_A);
+        int hashB = frostSecurity.hashAsInt(fileName, MPQ_HASH_NAME_B);
+        HashTableEntry correctEntry = null;
+        for(int i = 0; i < hashTable.getEntries().size(); i++) {
+            HashTableEntry current = hashTable.get(i);
+            if(current.getFilePathHashA() == hashA && current.getFilePathHashB() == hashB) {
+                correctEntry = current;
+                context.getLogger().debug("Found a matching entry for hashes (v2)");
+            }
+            context.getLogger().debug(i+"");
+        }
+        return correctEntry;
     }
 
     /**
@@ -72,6 +116,20 @@ public final class FrostUtility {
      */
     public boolean hasFile(HashTable hashTable, String fileName, short lang, short platform) {
         return this.findEntry(hashTable, fileName, lang, platform) != null;
+    }
+
+    public List<HashTableEntry> findAllEntries(HashTable hashTable, String fileName, short anyLanguage, short anyPlatform) {
+        int hashA = frostSecurity.hashAsInt(fileName, MPQ_HASH_NAME_A);
+        int hashB = frostSecurity.hashAsInt(fileName, MPQ_HASH_NAME_B);
+        List<HashTableEntry> entries = new ArrayList<>();
+        for(int i = 0; i < hashTable.getEntries().size(); i++) {
+            HashTableEntry current = hashTable.get(i);
+            if(current.getFilePathHashA() == hashA && current.getFilePathHashB() == hashB) {
+                entries.add(current);
+                context.getLogger().debug("Found a matching entry for hashes (all entries)");
+            }
+        }
+        return entries;
     }
 
     /*

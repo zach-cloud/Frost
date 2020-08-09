@@ -1,5 +1,6 @@
 package model;
 
+import helper.IntHelper;
 import interfaces.IByteSerializable;
 import settings.MpqContext;
 import frost.FrostConstants;
@@ -32,13 +33,19 @@ public final class HashTableEntry implements IByteSerializable {
     private int callbackId;
     private MpqContext context;
 
-    public HashTableEntry(int filePathHashA, int filePathHashB, short language, short platform, int fileBlockIndex, MpqContext context) {
+    public HashTableEntry(int filePathHashA, int filePathHashB, short language, short platform, int fileBlockIndex, int blockTableSize, MpqContext context) {
         this.filePathHashA = filePathHashA;
         this.filePathHashB = filePathHashB;
         this.language = language;
         this.platform = platform;
         this.fileBlockIndex = fileBlockIndex;
         this.context = context;
+        if(fileBlockIndex < 0) {
+            this.fileBlockIndex += Integer.MAX_VALUE;
+            this.fileBlockIndex = this.fileBlockIndex % blockTableSize;
+            context.getLogger().debug("Adjusted a key to " + this.fileBlockIndex);
+        }
+        this.fileBlockIndex = this.fileBlockIndex % blockTableSize;
     }
 
     /**

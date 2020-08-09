@@ -26,7 +26,7 @@ public final class HashTable implements IByteSerializable {
      * @param frostSecurity      Encryption module with little endian order
      * @param encryptedHashTable Encrypted hash table (read from file)
      */
-    public HashTable(FrostSecurity frostSecurity, EncryptedHashTable encryptedHashTable, MpqContext context) {
+    public HashTable(FrostSecurity frostSecurity, EncryptedHashTable encryptedHashTable, int blockTableSize, MpqContext context) {
         entries = new ArrayList<>();
         this.context = context;
         this.security = frostSecurity;
@@ -35,7 +35,7 @@ public final class HashTable implements IByteSerializable {
         byte[] decryptedData = frostSecurity.decryptBytes(encryptedData, HASH_TABLE_ENCRYPTION_KEY);
         context.getLogger().debug("Decrypted bytes into: " + decryptedData.length);
         if (decryptedData.length % BYTES_PER_HASH_TABLE_ENTRY != 0) {
-            context.getErrorHandler().handleCriticalError("Could not convert decrypted bytes " +
+            context.getLogger().warn("Could not convert decrypted bytes " +
                     "into table entries (size = " + decryptedData.length + ")");
         }
 
@@ -46,11 +46,15 @@ public final class HashTable implements IByteSerializable {
             byte[] platform = extractBytes(decryptedData, 10 + (i * BYTES_PER_HASH_TABLE_ENTRY), 2);
             byte[] fileBlockIndex = extractBytes(decryptedData, 12 + (i * BYTES_PER_HASH_TABLE_ENTRY), 4);
             HashTableEntry entry = new HashTableEntry(byteToInt(filePathHashA), byteToInt(filePathHashB),
-                    byteToShort(language), byteToShort(platform), byteToInt(fileBlockIndex), context);
+                    byteToShort(language), byteToShort(platform), byteToInt(fileBlockIndex), blockTableSize, context);
             entry.setCallbackId(i);
             entries.add(entry);
         }
         context.getLogger().info("Hash table has " + entries.size() + " entries");
+    }
+
+    public void join(HashTable other) {
+        entries.addAll(other.entries);
     }
 
     /**

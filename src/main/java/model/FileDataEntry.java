@@ -62,8 +62,6 @@ public final class FileDataEntry implements IReadable, IByteSerializable {
             // One sector holds remainder
             sectorsInFile++;
         }
-        this.sectorOffsetTable = new int[sectorsInFile + 1];
-        this.originalOffsetTable = new int[sectorsInFile + 1];
     }
 
     private void read(BinaryReader reader, int key) {
@@ -117,6 +115,11 @@ public final class FileDataEntry implements IReadable, IByteSerializable {
             // We'll need to do this later...
             // Should find a cleaner way of doing this.
         }
+        if(blockTableEntry.getFileSize() > 500) {
+            // we'll read this later
+            this.reader = reader;
+            return;
+        }
 
         int currentPosition = 0;
         int remainingSize = blockTableEntry.getFileSize();
@@ -155,6 +158,14 @@ public final class FileDataEntry implements IReadable, IByteSerializable {
             // We'll need to do this later...
             // Should find a cleaner way of doing this.
         }
+        if(sectorsInFile > 5) {
+            // We'll read this later.
+            this.reader = reader;
+            return;
+        }
+
+        this.sectorOffsetTable = new int[sectorsInFile + 1];
+        this.originalOffsetTable = new int[sectorsInFile + 1];
 
         int totalReadBytes = 0;
 

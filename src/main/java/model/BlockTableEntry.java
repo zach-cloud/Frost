@@ -40,11 +40,21 @@ public final class BlockTableEntry implements IByteSerializable {
 
     public BlockTableEntry(int blockOffset, int blockSize, int fileSize,
                            int flags, MpqContext context) {
+//        if(blockSize < 0) {
+//            blockSize += Integer.MAX_VALUE;
+//        }
+        if(fileSize < 0) {
+            fileSize += Integer.MAX_VALUE;
+        }
         this.blockOffset = blockOffset;
         this.blockSize = blockSize;
         this.fileSize = fileSize;
         this.flags = flags;
         this.context = context;
+
+        if((blockSize <= 1000 && blockSize > 0) || (fileSize == 795)) {
+            System.out.println("Here..");
+        }
         calculateFlagValues();
         checkFlagValidity();
     }
@@ -72,14 +82,17 @@ public final class BlockTableEntry implements IByteSerializable {
      */
     private void checkFlagValidity() {
         if (keyAdjusted && !encrypted) {
-            context.getLogger().warn("Block cannot be key adjusted and not encrypted");
+            context.getLogger().warn("Block cannot be key adjusted and not encrypted. Fixing (set encrypted = true)");
+            encrypted = true;
         }
         if (!isFile) {
             if (blockSize > 0) {
-                context.getLogger().warn("Block is not a file but has size");
+                context.getLogger().warn("Block is not a file but has size. Fixing (set file = false)");
+                isFile = false;
             }
             if (singleUnit || keyAdjusted || encrypted || compressed || imploded) {
-                context.getLogger().warn("Block is not a file but has flags");
+                context.getLogger().warn("Block is not a file but has flags. Fixing (set file = true)");
+                isFile = true;
             }
         }
     }

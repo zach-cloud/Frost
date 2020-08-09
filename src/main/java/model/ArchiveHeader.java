@@ -65,7 +65,8 @@ public final class ArchiveHeader implements IReadable, IByteSerializable {
             blockTableOffset = reader.readInt();
             hashTableEntries = reader.readInt();
             blockTableEntries = reader.readInt();
-            blockTableEntries = MaliciousMPQHelper.fixBlockTableSize(blockTableEntries, archiveSize, blockTableOffset);
+            blockTableEntries = MaliciousMPQHelper.fixTableSize(blockTableEntries, archiveSize, blockTableOffset);
+            hashTableEntries = MaliciousMPQHelper.fixTableSize(hashTableEntries, archiveSize, hashTableOffset);
             if (format == 1) {
                 extendedBlockTableOffset = reader.readLong();
                 hashTableOffsetHigh = reader.readShort();

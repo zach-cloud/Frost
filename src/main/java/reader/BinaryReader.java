@@ -134,6 +134,9 @@ public final class BinaryReader {
     }
 
     private byte[] readBytesInternal(int count) throws IOException {
+        if(stream.array().length < ((Buffer) stream).position() + count) {
+            count = stream.array().length - ((Buffer) stream).position();
+        }
         byte[] collected = new byte[count];
         for (int i = 0; i < count; i++) {
             collected[i] = readByteInternal();
@@ -259,6 +262,10 @@ public final class BinaryReader {
             collected[i] = readByteInternal();
         }
         return ByteBuffer.wrap(collected).order(byteOrder).getFloat();
+    }
+
+    public int maxPosition() {
+        return stream.array().length;
     }
 
     public int getPosition() {

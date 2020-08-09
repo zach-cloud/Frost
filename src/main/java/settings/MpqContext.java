@@ -1,5 +1,6 @@
 package settings;
 
+import compression.CompressionHandler;
 import io.FileWriter;
 
 public final class MpqContext {
@@ -8,6 +9,7 @@ public final class MpqContext {
     private MpqSettings settings;
     private MpqErrorHandler errorHandler;
     private FileWriter fileWriter;
+    private CompressionHandler compressionHandler;
 
     public MpqContext(MpqLogger logger, MpqSettings settings) {
         this.logger = logger;
@@ -50,5 +52,12 @@ public final class MpqContext {
 
     public void setFileWriter(FileWriter fileWriter) {
         this.fileWriter = fileWriter;
+    }
+
+    public CompressionHandler getCompressionHandler() {
+        if(compressionHandler == null) {
+            compressionHandler = new CompressionHandler(this);
+        }
+        return compressionHandler;
     }
 }
