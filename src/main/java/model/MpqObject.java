@@ -11,7 +11,6 @@ import settings.MpqContext;
 import java.io.File;
 import java.io.IOException;
 import java.nio.Buffer;
-import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -304,7 +303,7 @@ public final class MpqObject implements IReadable, IByteSerializable {
      */
     @Override
     public byte[] toBytes() {
-        rebuild();
+        reorganizeArchive();
         byte[] nextToAdd;
         ByteBuffer archiveBytes = ByteBuffer.allocate(preHeader.length +
                 archiveHeader.getArchiveSize());
@@ -456,7 +455,7 @@ public final class MpqObject implements IReadable, IByteSerializable {
         // Finally, increase the archive size.
         this.archiveHeader.setArchiveSize(1 + archiveHeader.getArchiveSize() + data.length + bytesRequired);
         context.getLogger().debug("Added a single sector entry of " + data.length + " bytes");
-        rebuild();
+        reorganizeArchive();
         context.getLogger().debug("Rebuilt MPQ after importing file.");
     }
 
@@ -496,7 +495,7 @@ public final class MpqObject implements IReadable, IByteSerializable {
      * Places hash table after file data
      * Places block table after hash table
      */
-    public void rebuild() {
+    public void reorganizeArchive() {
         // Calculate new values for the header.
         int newHeaderStart = preHeader.length;
         int newBlockTableSize = blockTable.getEntries().size();
