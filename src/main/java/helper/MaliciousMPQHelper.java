@@ -3,30 +3,34 @@ package helper;
 import reader.BinaryReader;
 import frost.FrostConstants;
 
+import static frost.FrostConstants.MPQ_HASH_ENTRY_DELETED;
+import static frost.FrostConstants.MPQ_HASH_ENTRY_EMPTY;
+
 /**
  * Helper class to reverse the effects of malicious MPQs.
  */
 public final class MaliciousMPQHelper {
 
     /**
-     * MPQs may have an invalid block table size set, where the size is much
-     * greater than the remaining available bytes.
-     * This method fixes the block table size.
+     * MPQs may have an invalid block/hash table size set,
+     * where the size is much greater than the remaining
+     * available bytes. This method fixes the block/hash
+     * table size.
      *
-     * @param originalBlockTableSize Original size that may or may not be valid
-     * @param archiveSize            Total archive size
-     * @param blockTableOffset       Block table offset in archive
+     * @param tableSize   Original size that may or may not be valid
+     * @param archiveSize Total archive size
+     * @param tableOffset Block table offset in archive
      * @return Valid block table size
      */
-    public static int fixBlockTableSize(int originalBlockTableSize,
-                                        int archiveSize, int blockTableOffset) {
-        int totalBytesAvailable = archiveSize - blockTableOffset;
-        int desiredBytes = FrostConstants.BYTES_PER_BLOCK_TABLE_ENTRY * originalBlockTableSize;
+    public static int fixTableSize(int tableSize,
+                                   int archiveSize, int tableOffset) {
+        int totalBytesAvailable = archiveSize - tableOffset;
+        long desiredBytes = (long)FrostConstants.BYTES_PER_BLOCK_TABLE_ENTRY * (long)tableSize;
         if (desiredBytes > totalBytesAvailable
                 || desiredBytes < 0) {
-            originalBlockTableSize = totalBytesAvailable / FrostConstants.BYTES_PER_BLOCK_TABLE_ENTRY;
+            tableSize = totalBytesAvailable / FrostConstants.BYTES_PER_BLOCK_TABLE_ENTRY;
         }
-        return originalBlockTableSize;
+        return tableSize;
     }
 
     /**
@@ -45,5 +49,31 @@ public final class MaliciousMPQHelper {
             return originalArchiveSize;
         }
         return availableSize;
+    }
+
+    /**
+     * Checks if this operation will overflow values.
+     *
+     * @param entryCount    Num. entries in the table
+     * @param entrySize     Size per entry
+     * @return              True if overflows, false if not.
+     */
+    public static boolean sizeCheck(int entryCount, int entrySize) {
+        long calculatedValue = (long)entryCount * (long)entrySize;
+        return (calculatedValue >= Integer.MAX_VALUE);
+    }
+
+    /**
+     * Corrects malicious negative values.
+     *
+     * @param original  Original value
+     * @return          Valid value
+     */
+    public static int fixNegativeValue(int original) {
+        // If it's negative 1, it's more questionable.
+        if(original < -1 && original != MPQ_HASH_ENTRY_EMPTY && original != MPQ_HASH_ENTRY_DELETED) {
+            original += Integer.MAX_VALUE;
+        }
+        return original;
     }
 }

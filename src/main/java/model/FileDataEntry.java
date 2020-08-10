@@ -48,6 +48,10 @@ public final class FileDataEntry implements IReadable, IByteSerializable {
     public FileDataEntry(int archiveOffset, FrostSecurity frostSecurity, int initialPosition, ArchiveHeader header, BlockTableEntry blockTableEntry, HashTableEntry hashTableEntry, MpqContext context) {
         this.frostSecurity = frostSecurity;
         this.initialPosition = initialPosition;
+        if(initialPosition < -1) {
+            context.getLogger().warn("Negative file data position");
+            return;
+        }
         this.archiveOffset = archiveOffset;
         this.newSectors = new ArrayList<>();
         this.header = header;

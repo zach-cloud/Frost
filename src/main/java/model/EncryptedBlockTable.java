@@ -1,6 +1,7 @@
 package model;
 
 import helper.ByteHelper;
+import helper.MaliciousMPQHelper;
 import interfaces.IReadable;
 import interfaces.IByteSerializable;
 import reader.BinaryReader;
@@ -11,6 +12,7 @@ import frost.FrostSecurity;
 import java.io.IOException;
 
 import static frost.FrostConstants.BLOCK_TABLE_ENCRYPTION_KEY;
+import static frost.FrostConstants.BYTES_PER_HASH_TABLE_ENTRY;
 
 public final class EncryptedBlockTable implements IReadable, IByteSerializable {
 
@@ -51,6 +53,9 @@ public final class EncryptedBlockTable implements IReadable, IByteSerializable {
     @Override
     public void read(BinaryReader reader) {
         try {
+            if(MaliciousMPQHelper.sizeCheck(entryCount, FrostConstants.BYTES_PER_BLOCK_TABLE_ENTRY)) {
+                context.getErrorHandler().handleCriticalError("Hash table too large");
+            }
             int size = entryCount * FrostConstants.BYTES_PER_BLOCK_TABLE_ENTRY;
             encryptedData = reader.readBytes(size);
             context.getLogger().debug("Read " + size + " bytes as encrypted block table");

@@ -1,7 +1,9 @@
 package model;
 
+import exception.MpqException;
 import frost.FrostSecurity;
 import helper.ByteHelper;
+import helper.MaliciousMPQHelper;
 import interfaces.IReadable;
 import interfaces.IByteSerializable;
 import reader.BinaryReader;
@@ -36,6 +38,9 @@ public final class EncryptedHashTable implements IReadable, IByteSerializable {
     @Override
     public void read(BinaryReader reader) {
         try {
+            if(MaliciousMPQHelper.sizeCheck(entryCount, BYTES_PER_HASH_TABLE_ENTRY)) {
+                context.getErrorHandler().handleCriticalError("Hash table too large");
+            }
             int size = entryCount * BYTES_PER_HASH_TABLE_ENTRY;
             encryptedData = reader.readBytes(size);
             context.getLogger().debug("Read " + size + " bytes as encrypted hash table");

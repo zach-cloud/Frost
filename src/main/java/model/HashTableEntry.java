@@ -1,5 +1,6 @@
 package model;
 
+import helper.MaliciousMPQHelper;
 import interfaces.IByteSerializable;
 import settings.MpqContext;
 import frost.FrostConstants;
@@ -32,12 +33,14 @@ public final class HashTableEntry implements IByteSerializable {
     private int callbackId;
     private MpqContext context;
 
-    public HashTableEntry(int filePathHashA, int filePathHashB, short language, short platform, int fileBlockIndex, MpqContext context) {
+    public HashTableEntry(int filePathHashA, int filePathHashB,
+                          short language, short platform,
+                          int fileBlockIndex, MpqContext context) {
         this.filePathHashA = filePathHashA;
         this.filePathHashB = filePathHashB;
         this.language = language;
         this.platform = platform;
-        this.fileBlockIndex = fileBlockIndex;
+        this.fileBlockIndex = MaliciousMPQHelper.fixNegativeValue(fileBlockIndex);
         this.context = context;
     }
 

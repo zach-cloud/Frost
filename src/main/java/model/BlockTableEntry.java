@@ -1,5 +1,6 @@
 package model;
 
+import helper.MaliciousMPQHelper;
 import interfaces.IByteSerializable;
 import settings.MpqContext;
 
@@ -40,9 +41,9 @@ public final class BlockTableEntry implements IByteSerializable {
 
     public BlockTableEntry(int blockOffset, int blockSize, int fileSize,
                            int flags, MpqContext context) {
-        this.blockOffset = blockOffset;
-        this.blockSize = blockSize;
-        this.fileSize = fileSize;
+        this.blockOffset = MaliciousMPQHelper.fixNegativeValue(blockOffset);
+        this.blockSize = MaliciousMPQHelper.fixNegativeValue(blockSize);
+        this.fileSize = MaliciousMPQHelper.fixNegativeValue(fileSize);
         this.flags = flags;
         this.context = context;
         calculateFlagValues();

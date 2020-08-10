@@ -95,6 +95,7 @@ public final class MpqObject implements IReadable, IByteSerializable {
             preHeader = reader.readBytes(headerStart);
             readBlockTable(reader, blockTableStart);
             readHashTable(reader, hashTableStart);
+            correctHashTableIndicies(hashTable, blockTable.getEntries().size());
             readFileData(reader);
             extractInternalListfile();
             context.getLogger().info("Successfully read " + fileData.size() + " files.");
@@ -103,6 +104,12 @@ public final class MpqObject implements IReadable, IByteSerializable {
             ex.printStackTrace();
             context.getErrorHandler().handleCriticalError(
                     "Failed to build MPQ file: " + ex.getMessage());
+        }
+    }
+
+    private void correctHashTableIndicies(HashTable hashTable, int size) {
+        for(HashTableEntry entry : hashTable.getEntries()) {
+            entry.setFileBlockIndex(entry.getFileBlockIndex() % size);
         }
     }
 
@@ -166,12 +173,16 @@ public final class MpqObject implements IReadable, IByteSerializable {
                     if (blockTableEntry.isEncrypted()) {
                         context.getLogger().debug("Encrypted entry will be read later.");
                     }
-                    FileDataEntry fileDataEntry = new FileDataEntry(headerStart, frostSecurity,
-                            blockTableEntry.getBlockOffset() + headerStart,
-                            archiveHeader, blockTableEntry, hashTableEntry, context);
-                    context.getLogger().debug("Reading block table entry position=" + hashTableEntry.getFileBlockIndex());
-                    fileDataEntry.read(reader);
-                    fileData.add(fileDataEntry);
+                    try {
+                        FileDataEntry fileDataEntry = new FileDataEntry(headerStart, frostSecurity,
+                                blockTableEntry.getBlockOffset() + headerStart,
+                                archiveHeader, blockTableEntry, hashTableEntry, context);
+                        context.getLogger().debug("Reading block table entry position=" + hashTableEntry.getFileBlockIndex());
+                        fileDataEntry.read(reader);
+                        fileData.add(fileDataEntry);
+                    } catch (Exception ex) {
+                        context.getLogger().warn("Invalid file at block " + blockTableEntry.getCallbackId());
+                    }
                 } else {
                     context.getLogger().warn("Invalid block table entry point: " + hashTableEntry.getFileBlockIndex() + ". Ignored.");
                 }
