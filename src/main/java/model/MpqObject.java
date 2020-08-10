@@ -201,6 +201,10 @@ public final class MpqObject implements IReadable, IByteSerializable {
                             System.out.println("Here");
                         }
 
+                        if(hashTableEntry.getFileBlockIndex() == 19867) {
+                            System.out.println("HERE");
+                        }
+
                         if (blockTableEntry.getBlockOffset() < 0 || blockTableEntry.getFileSize() < 0
                                 || blockTableEntry.getBlockSize() < 0 ||
                                 blockTableEntry.getBlockOffset() + headerStart > maxValue ||
@@ -251,7 +255,8 @@ public final class MpqObject implements IReadable, IByteSerializable {
      * @return True if exists; false if not.
      */
     public boolean fileExists(String fileName) {
-        FileDataEntry entry = frostUtility.findFileData(fileName, fileData);
+        HashTableEntry entry = frostUtility.findEntryV2
+                (hashTable, fileName, FrostConstants.ANY_LANGUAGE, FrostConstants.ANY_PLATFORM);
         return entry != null;
     }
 
