@@ -25,7 +25,6 @@ public final class FileSectorEntry implements IByteSerializable {
     private byte[] fileData; // Stores decompressed/decrypted data. Essentially a cache for multiple extractions.
 
     private BinaryReader reader;
-    private CompressionHandler compressionHandler;
 
     private boolean isRead; // Set to true when we read raw datA
     private boolean isProcessed; // Set to true when we finish decompressing/decrypting/etc.
@@ -59,7 +58,6 @@ public final class FileSectorEntry implements IByteSerializable {
         this.compressed = compressed;
         this.encrypted = encrypted;
         this.key = key;
-        this.compressionHandler = new CompressionHandler(context);
         this.frostSecurity = frostSecurity;
     }
 
@@ -102,7 +100,7 @@ public final class FileSectorEntry implements IByteSerializable {
             if (compressed) {
                 byte compressionFlag = rawData[0];
                 fileData = ByteHelper.trimBytes(rawData, 1);
-                fileData = compressionHandler.decompress(fileData, compressionFlag, realSize);
+                fileData = context.getCompressionHandler().decompress(fileData, compressionFlag, realSize);
             } else {
                 fileData = rawData;
             }
@@ -221,14 +219,6 @@ public final class FileSectorEntry implements IByteSerializable {
 
     public void setReader(BinaryReader reader) {
         this.reader = reader;
-    }
-
-    public CompressionHandler getCompressionHandler() {
-        return compressionHandler;
-    }
-
-    public void setCompressionHandler(CompressionHandler compressionHandler) {
-        this.compressionHandler = compressionHandler;
     }
 
     public boolean isRead() {
