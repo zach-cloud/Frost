@@ -36,3 +36,15 @@ Feature: MPQ end to end tests
     Then There should be 82 file names
     When All known files are extracted with listfile "listfile.txt"
     Then 84 files should have been extracted
+
+  Scenario: Test reading complex protected map
+    Given File is deleted: "saved.w3x"
+    Given MPQ file: "Pg.w3x"
+    When MPQ file is read
+    When File is added "test.txt"
+    When File is saved as "saved.w3x"
+    Then File should exist on disk "saved.w3x"
+    Given MPQ file: "saved.w3x"
+    When MPQ file is read
+    Then File should exist: "test.txt"
+    Given File is deleted: "saved.w3x"

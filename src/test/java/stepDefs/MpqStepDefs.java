@@ -6,12 +6,15 @@ import io.FileWriter;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import org.apache.commons.io.IOUtils;
 import org.junit.Assert;
 import org.mockito.Mockito;
 import settings.MpqContext;
 import settings.MpqSettings;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.net.URI;
 import java.net.URL;
 import java.util.Set;
 
@@ -19,6 +22,7 @@ import static org.mockito.Matchers.any;
 
 public class MpqStepDefs {
 
+    private File resourcesRoot = new File("src/test/resources/");
     private File mpqFile;
     private IFrostMpq mpq;
     private MpqContext context;
@@ -26,9 +30,9 @@ public class MpqStepDefs {
     private Set<String> fileNames;
 
     @Given("MPQ file: {string}")
-    public void mpq_file(String filePath) {
-        URL url = Thread.currentThread().getContextClassLoader().getResource(filePath);
-        mpqFile = new File(url.getPath());
+    public void mpq_file(String fileName) {
+        String filePath = resourcesRoot.getAbsolutePath() + "\\" + fileName;
+        mpqFile = new File(filePath);
     }
 
     @When("MPQ file is read")
@@ -109,4 +113,35 @@ public class MpqStepDefs {
         Assert.assertEquals(count, fileNames.size());
     }
 
+    @Given("File is deleted: {string}")
+    public void file_is_deleted(String fileName) {
+        String filePath = resourcesRoot.getAbsolutePath() + "\\" + fileName;
+        File file = new File(filePath);
+        if(file.exists()) {
+            file.delete();
+        }
+    }
+
+    @When("File is added {string}")
+    public void file_is_added(String fileName) throws Exception {
+        String filePath = resourcesRoot.getAbsolutePath() + "\\" + fileName;
+        File file = new File(filePath);
+        if(file.exists()) {
+            byte[] data = IOUtils.toByteArray(new FileInputStream(file));
+            mpq.importFile(fileName, data);
+        } else {
+            Assert.fail("No file provided");
+        }
+    }
+    @When("File is saved as {string}")
+    public void file_is_saved_as(String fileName) {
+        String filePath = resourcesRoot.getAbsolutePath() + "\\" + fileName;
+        mpq.save(new File(filePath));
+    }
+    @Then("File should exist on disk {string}")
+    public void file_should_exist_on_disk(String fileName) {
+        String filePath = resourcesRoot.getAbsolutePath() + "\\" + fileName;
+        File file = new File(filePath);
+        Assert.assertTrue(file.exists());
+    }
 }
