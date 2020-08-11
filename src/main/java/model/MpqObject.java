@@ -177,7 +177,7 @@ public final class MpqObject implements IReadable, IByteSerializable {
                                 blockTableEntry.getBlockOffset() + headerStart,
                                 archiveHeader, blockTableEntry, hashTableEntry, context);
                         context.getLogger().debug("Reading block table entry position=" + hashTableEntry.getFileBlockIndex());
-                        fileDataEntry.read(reader);
+                        fileDataEntry.saveReader(reader);
                         fileData.add(fileDataEntry);
                     } catch (Exception ex) {
                         context.getLogger().warn("Invalid file at block " + blockTableEntry.getCallbackId());
@@ -277,9 +277,10 @@ public final class MpqObject implements IReadable, IByteSerializable {
             ByteBuffer totalBytes = ByteBuffer.allocate(0);
             for (FileDataEntry fileDataEntry : fileData) {
                 if (fileDataEntry.getHashTableEntry() == entry) {
+                    fileDataEntry.readSelf();
                     byte[] bytesToAdd = fileDataEntry.getFileBytes(fileName);
                     if (bytesToAdd.length + ((Buffer) totalBytes).position() > totalBytes.capacity()) {
-                        context.getLogger().debug("Reallocating to: " + bytesToAdd.length + ((Buffer) totalBytes).position());
+                        context.getLogger().debug("Reallocating to: " + ((int)bytesToAdd.length + (int)((Buffer) totalBytes).position()));
                         totalBytes = reallocate(totalBytes, bytesToAdd.length + ((Buffer) totalBytes).position());
                     }
                     context.getLogger().debug("Adding " + bytesToAdd.length + " bytes");

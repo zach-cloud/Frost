@@ -1,6 +1,7 @@
 Feature: MPQ end to end tests
 
   Scenario: Test reading basic unprotected MPQ
+    Given File is deleted: "saved.w3x"
     Given MPQ file: "JungleEscape.w3x"
     When MPQ file is read
     Then MPQ should have 19 total files
@@ -17,6 +18,14 @@ Feature: MPQ end to end tests
     Then There should be 19 file names
     When All known files are extracted with listfile "listfile.txt"
     Then 19 files should have been extracted
+    Given a real file writer
+    When File is added "test.txt"
+    When File is saved as "saved.w3x"
+    Then File should exist on disk "saved.w3x"
+    Given MPQ file: "saved.w3x"
+    When MPQ file is read
+    Then File should exist: "test.txt"
+    Given File is deleted: "saved.w3x"
 
   Scenario: Test reading basic protected map
     Given MPQ file: "VampirismSpeed.w3x"

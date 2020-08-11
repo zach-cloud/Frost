@@ -54,7 +54,6 @@ public class MpqStepDefs {
             makeMockFileWriter();
             mpq.extractFile(fileName);
         } catch (Exception ex) {
-            ex.printStackTrace();
         }
     }
 
@@ -138,6 +137,12 @@ public class MpqStepDefs {
         String filePath = resourcesRoot.getAbsolutePath() + "\\" + fileName;
         mpq.save(new File(filePath));
     }
+
+    @Given("a real file writer")
+    public void a_real_file_writer() {
+        this.context.setFileWriter(new FileWriter());
+    }
+
     @Then("File should exist on disk {string}")
     public void file_should_exist_on_disk(String fileName) {
         String filePath = resourcesRoot.getAbsolutePath() + "\\" + fileName;

@@ -31,11 +31,21 @@ public final class FileDataEntry implements IReadable, IByteSerializable {
 
     private int sectorsInFile;
 
+    private boolean offsetTablesAllocated = false;
     private int[] sectorOffsetTable;
     private int[] originalOffsetTable;
 
     private MpqContext context;
     private BinaryReader reader;
+
+    private void allocateOffsetTables() {
+        if (offsetTablesAllocated) {
+            return;
+        }
+        offsetTablesAllocated = true;
+        this.sectorOffsetTable = new int[sectorsInFile + 1];
+        this.originalOffsetTable = new int[sectorsInFile + 1];
+    }
 
     /**
      * Makes a new file data entry
@@ -48,7 +58,7 @@ public final class FileDataEntry implements IReadable, IByteSerializable {
     public FileDataEntry(int archiveOffset, FrostSecurity frostSecurity, int initialPosition, ArchiveHeader header, BlockTableEntry blockTableEntry, HashTableEntry hashTableEntry, MpqContext context) {
         this.frostSecurity = frostSecurity;
         this.initialPosition = initialPosition;
-        if(initialPosition < -1) {
+        if (initialPosition < -1) {
             context.getLogger().warn("Negative file data position");
             return;
         }
@@ -66,16 +76,20 @@ public final class FileDataEntry implements IReadable, IByteSerializable {
             // One sector holds remainder
             sectorsInFile++;
         }
-        this.sectorOffsetTable = new int[sectorsInFile + 1];
-        this.originalOffsetTable = new int[sectorsInFile + 1];
     }
 
     private void read(BinaryReader reader, int key) {
+        if (isComplete) {
+            // We already read it.
+            return;
+        }
+        allocateOffsetTables();
         if (blockTableEntry.getFileSize() <= 0) {
             // A worthless block. Let's skip it.
             isComplete = false;
             return;
         }
+
         reader.setPosition(initialPosition);
 
         try {
@@ -96,6 +110,7 @@ public final class FileDataEntry implements IReadable, IByteSerializable {
         this.sectorsInFile = 0;
         this.originalOffsetTable = new int[0];
         this.sectorOffsetTable = new int[0]; // We do not need a sector offset table.
+        offsetTablesAllocated = true;
         FileSectorEntry entry = new FileSectorEntry(0, data.length, blockTableEntry.getBlockOffset(),
                 data.length, data.length, false, false, -1, null, context, frostSecurity);
         entry.setSingleSectorData(data);
@@ -369,8 +384,11 @@ public final class FileDataEntry implements IReadable, IByteSerializable {
                     blockTableEntry.getBlockSize()) + ")");
             buffer.order(ByteOrder.LITTLE_ENDIAN);
 
-            for (int i = 0; i < originalOffsetTable.length; i++) {
-                buffer.putInt(originalOffsetTable[i]);
+            // We don't initiate this stuff unless we need it.
+            if(originalOffsetTable != null) {
+                for (int i = 0; i < originalOffsetTable.length; i++) {
+                    buffer.putInt(originalOffsetTable[i]);
+                }
             }
 
             for (int i = 0; i < newSectors.size(); i++) {
@@ -403,5 +421,13 @@ public final class FileDataEntry implements IReadable, IByteSerializable {
         for (FileSectorEntry sector : newSectors) {
             sector.setOffset(newFileOffset);
         }
+    }
+
+    public void readSelf() {
+        read(reader);
+    }
+
+    public void saveReader(BinaryReader reader) {
+        this.reader = reader;
     }
 }

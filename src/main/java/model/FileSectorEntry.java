@@ -8,6 +8,7 @@ import reader.BinaryReader;
 import settings.MpqContext;
 
 import java.io.IOException;
+import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 
 public final class FileSectorEntry implements IByteSerializable {
