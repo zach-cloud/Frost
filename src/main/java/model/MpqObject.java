@@ -1,5 +1,6 @@
 package model;
 
+import custom.PgProtectionRemover;
 import frost.FrostSecurity;
 import interfaces.IByteSerializable;
 import frost.FrostConstants;
@@ -54,6 +55,9 @@ public final class MpqObject implements IReadable, IByteSerializable {
     private int blockTableOffsetHigh;
     private int headerStart;
 
+    // Helpers
+    private PgProtectionRemover pgProtectionRemover;
+
     private MpqContext context;
 
     public MpqObject(MpqContext context) {
@@ -69,6 +73,7 @@ public final class MpqObject implements IReadable, IByteSerializable {
     public void read(BinaryReader reader) {
         try {
             // Initialize helper components
+            this.pgProtectionRemover = new PgProtectionRemover();
             this.frostSecurity = new FrostSecurity();
             this.frostUtility = new FrostUtility(frostSecurity, context);
 
@@ -92,9 +97,23 @@ public final class MpqObject implements IReadable, IByteSerializable {
             // Read stuff before header
             reader.setPosition(0);
             preHeader = reader.readBytes(headerStart);
+            boolean pgProtected = false;
+            if(pgProtectionRemover.pgProtectionChecker(archiveHeader.getHashTableEntries())) {
+                // TODO: Do we even need a hash table?
+                // TODO: Everything's encrypted, so can we try until we get a valid key?
+                // TODO: I still want to try this until I think its useless
+                // TODO: Re-architect program to not use hash table if not needed
+                hashTableStart += 16;
+                pgProtected = true;
+                archiveHeader.setHashTableEntries(archiveHeader.getHashTableEntries() - 1);
+            }
             readBlockTable(reader, blockTableStart);
             readHashTable(reader, hashTableStart);
             correctHashTableIndicies(hashTable, blockTable.getEntries().size());
+
+            if(pgProtected) {
+                pgProtectionRemover.removePgProtection(blockTable, hashTable, archiveHeader.getArchiveSize());
+            }
             readFileData(reader);
             extractInternalListfile();
             context.getLogger().info("Successfully read " + fileData.size() + " files.");
@@ -118,9 +137,9 @@ public final class MpqObject implements IReadable, IByteSerializable {
     private void calculateOffsets() {
         blockTableStart = archiveHeader.getBlockTableOffset() + headerStart;
         hashTableStart = archiveHeader.getHashTableOffset() + headerStart;
-        extendedBlockTableOffset = archiveHeader.getExtendedBlockTableOffset() + headerStart;
-        hashTableOffsetHigh = archiveHeader.getHashTableOffsetHigh() + headerStart;
-        blockTableOffsetHigh = archiveHeader.getBlockTableOffsetHigh() + headerStart;
+        extendedBlockTableOffset = archiveHeader.getExtendedBlockTableOffset();
+        hashTableOffsetHigh = archiveHeader.getHashTableOffsetHigh();
+        blockTableOffsetHigh = archiveHeader.getBlockTableOffsetHigh();
     }
 
     /**
@@ -257,6 +276,11 @@ public final class MpqObject implements IReadable, IByteSerializable {
      */
     public byte[] getFileBytes(String fileName) {
         try {
+//            List<HashTableEntry> allMatchingEntries = findEntries(fileName);
+//            for(HashTableEntry entry2 : allMatchingEntries) {
+//                BlockTableEntry entry3 = blockTable.get(entry2.getFileBlockIndex());
+//                System.out.println(entry3);
+//            }
             HashTableEntry entry = findEntry(fileName);
 
             // Discover duplicates
@@ -294,6 +318,11 @@ public final class MpqObject implements IReadable, IByteSerializable {
             ex.printStackTrace();
             return new byte[0];
         }
+    }
+
+    private List<HashTableEntry> findEntries(String fileName) {
+        return frostUtility.findEntries
+                (hashTable, fileName, FrostConstants.ANY_LANGUAGE, FrostConstants.ANY_PLATFORM);
     }
 
     /**
