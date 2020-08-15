@@ -114,7 +114,7 @@ not supported. I have not seen any maps using these fields in my tests.
 
 # Programmer guide
 
-1: Import FrozenMPQ2 as a dependency to your project using Maven (or equivalent)
+1: Import Frost as a dependency to your project using Maven (or equivalent)
 
 ```
     <dependency>
@@ -126,7 +126,7 @@ not supported. I have not seen any maps using these fields in my tests.
 
 2: Create an MPQ object from a file or String path:
 ```$xslt
-IMpq frostMPQ = new Mpq(inFile);
+IFrostMpq frostMPQ = new FrostMpq(inFile);
 ```
 
 3: Use the operations on the MPQ, for example:
