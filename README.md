@@ -114,10 +114,15 @@ not supported. I have not seen any maps using these fields in my tests.
 
 # Programmer guide
 
-NOT AVAILABLE YET THROUGH MAVEN!
-Coming sooon!
-
 1: Import FrozenMPQ2 as a dependency to your project using Maven (or equivalent)
+
+```
+    <dependency>
+        <groupId>com.github.zach-cloud</groupId>
+        <artifactId>Frost</artifactId>
+        <version>1.0</version>
+    </dependency>
+```
 
 2: Create an MPQ object from a file or String path:
 ```$xslt
