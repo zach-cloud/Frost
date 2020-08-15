@@ -97,23 +97,19 @@ public final class MpqObject implements IReadable, IByteSerializable {
             // Read stuff before header
             reader.setPosition(0);
             preHeader = reader.readBytes(headerStart);
-            boolean pgProtected = false;
-            if(pgProtectionRemover.pgProtectionChecker(archiveHeader.getHashTableEntries())) {
-                // TODO: Do we even need a hash table?
-                // TODO: Everything's encrypted, so can we try until we get a valid key?
-                // TODO: I still want to try this until I think its useless
-                // TODO: Re-architect program to not use hash table if not needed
-                hashTableStart += 16;
-                pgProtected = true;
-                archiveHeader.setHashTableEntries(archiveHeader.getHashTableEntries() - 1);
-            }
+//            boolean pgProtected = false;
+//            if(pgProtectionRemover.pgProtectionChecker(archiveHeader.getHashTableEntries())) {
+//             hashTableStart += 16;
+//                pgProtected = true;
+//                archiveHeader.setHashTableEntries(archiveHeader.getHashTableEntries() - 1);
+//            }
             readBlockTable(reader, blockTableStart);
             readHashTable(reader, hashTableStart);
             correctHashTableIndicies(hashTable, blockTable.getEntries().size());
 
-            if(pgProtected) {
-                pgProtectionRemover.removePgProtection(blockTable, hashTable, archiveHeader.getArchiveSize());
-            }
+//            if(pgProtected) {
+//                pgProtectionRemover.removePgProtection(blockTable, hashTable, archiveHeader.getArchiveSize());
+//            }
             readFileData(reader);
             extractInternalListfile();
             context.getLogger().info("Successfully read " + fileData.size() + " files.");

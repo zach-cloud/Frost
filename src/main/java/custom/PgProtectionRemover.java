@@ -5,6 +5,8 @@ import model.BlockTableEntry;
 import model.HashTable;
 import model.HashTableEntry;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,10 +47,12 @@ public class PgProtectionRemover {
         // Find a valid block table entry
         List<BlockTableEntry> validBlocks = new ArrayList<>();
         for (BlockTableEntry entry : blockTable.getEntries()) {
-            if(entry.isKeyAdjusted() &&
-                    entry.getFileSize() < archiveSize &&
-                    entry.getBlockSize() < archiveSize &&
-                    entry.getFileSize() > 0) {
+            if(!entry.isEncrypted()
+                && !entry.isKeyAdjusted()
+                && entry.isCompressed()
+                && entry.isFile()
+                && entry.getBlockSize() == -1
+                && entry.getFileSize() < 1000000) {
                 validBlocks.add(entry);
             }
         }
@@ -57,7 +61,7 @@ public class PgProtectionRemover {
 
         int knownIndex = -1;
         for (BlockTableEntry entry : blockTable.getEntries()) {
-            if (entry.getFileSize() == 795 && entry.getFileSize() > 0) {
+            if (entry.getFileSize() == 795) {
                 knownIndex = entry.getCallbackId();
                 break;
             }
@@ -65,12 +69,32 @@ public class PgProtectionRemover {
         boolean foundValidEntry = false;
 
         for (HashTableEntry entry : hashTable.getEntries()) {
-            if (entry.getFileBlockIndex() == knownIndex
-            && entry.getFilePathHashA() == hashA
-            && entry.getFilePathHashB() == hashB) {
+            if(entry.getFilePathHashA() == hashA &&
+            entry.getFilePathHashB() == hashB) {
+                System.out.println("OK");
+            }
+            if (entry.getFileBlockIndex() == knownIndex) {
                 foundValidEntry = true;
             }
         }
         System.out.println(knownIndex);
+    }
+
+    public static void main(String[] args) {
+        ByteBuffer buffer = ByteBuffer.allocate(4);
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+        buffer.putInt(870877111);
+        byte[] stuff = buffer.array();
+        System.out.println(hex(stuff));
+    }
+
+    public static String hex(byte[] bytes) {
+        StringBuilder result = new StringBuilder();
+        for (byte aByte : bytes) {
+            result.append(String.format("%02x", aByte));
+            // upper case
+            // result.append(String.format("%02X", aByte));
+        }
+        return result.toString();
     }
 }
