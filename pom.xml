@@ -20,6 +20,18 @@
         <maven.surefire.version>2.22.1</maven.surefire.version>
     </properties>
 
+    <developers>
+        <developer>
+            <id>zach-cloud</id>
+            <name>Zachary Griggs</name>
+            <email>zacharygriggs1@gmail.com</email>
+            <timezone>+1</timezone>
+            <roles>
+                <role>developer</role>
+            </roles>
+        </developer>
+    </developers>
+
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
