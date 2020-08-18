@@ -1,7 +1,7 @@
 package compression;
 
 import interfaces.IGenericCompression;
-import reader.BinaryReader;
+import com.github.zachcloud.reader.BinaryReader;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -148,7 +148,7 @@ public final class AdpcmCompression implements IGenericCompression {
             }
 
             return outputBuffer.array();
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
     }

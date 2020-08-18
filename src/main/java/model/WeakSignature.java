@@ -1,8 +1,8 @@
 package model;
 
+import com.github.zachcloud.reader.BinaryReader;
 import interfaces.IReadable;
 import interfaces.IByteSerializable;
-import reader.BinaryReader;
 import settings.MpqContext;
 
 public final class WeakSignature implements IReadable, IByteSerializable {

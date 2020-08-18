@@ -3,7 +3,7 @@ package frost;
 import interfaces.IFrostMpq;
 import interfaces.IByteSerializable;
 import model.MpqObject;
-import reader.BinaryReader;
+import com.github.zachcloud.reader.BinaryReader;
 import settings.MpqContext;
 import settings.MpqLogger;
 import settings.MpqSettings;

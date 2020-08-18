@@ -1,6 +1,6 @@
 package interfaces;
 
-import reader.BinaryReader;
+import com.github.zachcloud.reader.BinaryReader;
 
 public interface IReadable {
 

@@ -3,7 +3,7 @@ package model;
 import helper.MaliciousMPQHelper;
 import interfaces.IReadable;
 import interfaces.IByteSerializable;
-import reader.BinaryReader;
+import com.github.zachcloud.reader.BinaryReader;
 import settings.MpqContext;
 
 import java.nio.ByteBuffer;

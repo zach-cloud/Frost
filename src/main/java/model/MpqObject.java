@@ -6,7 +6,7 @@ import interfaces.IByteSerializable;
 import frost.FrostConstants;
 import frost.FrostUtility;
 import interfaces.IReadable;
-import reader.BinaryReader;
+import com.github.zachcloud.reader.BinaryReader;
 import settings.MpqContext;
 
 import java.io.File;
@@ -95,7 +95,7 @@ public final class MpqObject implements IReadable, IByteSerializable {
             context.getLogger().debug("Header: " + archiveHeader.toString());
 
             // Read stuff before header
-            reader.setPosition(0);
+            reader.position(0);
             preHeader = reader.readBytes(headerStart);
 //            boolean pgProtected = false;
 //            if(pgProtectionRemover.pgProtectionChecker(archiveHeader.getHashTableEntries())) {
@@ -145,7 +145,7 @@ public final class MpqObject implements IReadable, IByteSerializable {
      * @param blockTableStart Index of block table in the file
      */
     private void readBlockTable(BinaryReader reader, int blockTableStart) {
-        reader.setPosition(blockTableStart);
+        reader.position(blockTableStart);
         this.encryptedBlockTable = new EncryptedBlockTable(archiveHeader.getBlockTableEntries(), context);
         encryptedBlockTable.read(reader);
         this.blockTable = new BlockTable(frostSecurity, encryptedBlockTable, context);
@@ -158,7 +158,7 @@ public final class MpqObject implements IReadable, IByteSerializable {
      * @param hashTableStart Index of hash table in file
      */
     private void readHashTable(BinaryReader reader, int hashTableStart) {
-        reader.setPosition(hashTableStart);
+        reader.position(hashTableStart);
         this.encryptedHashTable = new EncryptedHashTable(archiveHeader.getHashTableEntries(), context);
         encryptedHashTable.read(reader);
         this.hashTable = new HashTable(frostSecurity, encryptedHashTable, context);
@@ -442,6 +442,7 @@ public final class MpqObject implements IReadable, IByteSerializable {
      * @param data File bytes
      */
     public void importFile(String name, byte[] data) {
+        reorganizeArchive();
         // First, delete file if it exists.
         context.getLogger().debug("Attempting to delete file: " + name);
         delete(name);

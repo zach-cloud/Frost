@@ -1,6 +1,6 @@
 package helper;
 
-import reader.BinaryReader;
+import com.github.zachcloud.reader.BinaryReader;
 import frost.FrostConstants;
 
 import static frost.FrostConstants.MPQ_HASH_ENTRY_DELETED;

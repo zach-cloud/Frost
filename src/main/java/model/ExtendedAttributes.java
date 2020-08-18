@@ -2,7 +2,7 @@ package model;
 
 import interfaces.IReadable;
 import interfaces.IByteSerializable;
-import reader.BinaryReader;
+import com.github.zachcloud.reader.BinaryReader;
 import settings.MpqContext;
 
 public final class ExtendedAttributes implements IReadable, IByteSerializable {

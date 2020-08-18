@@ -1,12 +1,11 @@
 package model;
 
-import exception.MpqException;
 import frost.FrostSecurity;
 import helper.ByteHelper;
 import helper.MaliciousMPQHelper;
 import interfaces.IReadable;
 import interfaces.IByteSerializable;
-import reader.BinaryReader;
+import com.github.zachcloud.reader.BinaryReader;
 import settings.MpqContext;
 
 import java.io.IOException;
@@ -44,7 +43,7 @@ public final class EncryptedHashTable implements IReadable, IByteSerializable {
             int size = entryCount * BYTES_PER_HASH_TABLE_ENTRY;
             encryptedData = reader.readBytes(size);
             context.getLogger().debug("Read " + size + " bytes as encrypted hash table");
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
     }

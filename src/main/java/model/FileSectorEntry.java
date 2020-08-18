@@ -4,7 +4,7 @@ import compression.CompressionHandler;
 import interfaces.IByteSerializable;
 import frost.FrostSecurity;
 import helper.ByteHelper;
-import reader.BinaryReader;
+import com.github.zachcloud.reader.BinaryReader;
 import settings.MpqContext;
 
 import java.io.IOException;
@@ -72,7 +72,7 @@ public final class FileSectorEntry implements IByteSerializable {
         }
         try {
             // We only read rawData when requested to save memory!
-            reader.setPosition(start + offset);
+            reader.position(start + offset);
             rawData = reader.readBytes((end + offset) - (start + offset));
             if (encrypted) {
                 context.getLogger().debug("Decrypting file data with key=" + key + sectorCount);
@@ -84,7 +84,7 @@ public final class FileSectorEntry implements IByteSerializable {
                         + rawData.length + " vs " + compressedSize + ")");
             }
             isRead = true;
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
     }

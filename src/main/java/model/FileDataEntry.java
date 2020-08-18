@@ -4,7 +4,7 @@ import frost.FrostSecurity;
 import interfaces.IByteSerializable;
 import frost.FrostConstants;
 import interfaces.IReadable;
-import reader.BinaryReader;
+import com.github.zachcloud.reader.BinaryReader;
 import settings.MpqContext;
 
 import java.io.IOException;
@@ -90,7 +90,7 @@ public final class FileDataEntry implements IReadable, IByteSerializable {
             return;
         }
 
-        reader.setPosition(initialPosition);
+        reader.position(initialPosition);
 
         try {
             if (!(blockTableEntry.isCompressed() || blockTableEntry.isImploded())) {

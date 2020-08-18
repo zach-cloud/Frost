@@ -4,7 +4,7 @@ import helper.ByteHelper;
 import helper.MaliciousMPQHelper;
 import interfaces.IReadable;
 import interfaces.IByteSerializable;
-import reader.BinaryReader;
+import com.github.zachcloud.reader.BinaryReader;
 import settings.MpqContext;
 import frost.FrostConstants;
 import frost.FrostSecurity;
@@ -59,7 +59,7 @@ public final class EncryptedBlockTable implements IReadable, IByteSerializable {
             int size = entryCount * FrostConstants.BYTES_PER_BLOCK_TABLE_ENTRY;
             encryptedData = reader.readBytes(size);
             context.getLogger().debug("Read " + size + " bytes as encrypted block table");
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
